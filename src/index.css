@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Trading Glow Animations */
+@keyframes pulse-glow-green {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+  }
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  }
+}
+
+.glow-green {
+  animation: pulse-glow-green 2s infinite;
+}
+
+.glow-red {
+  animation: pulse-glow-red 2s infinite;
+}
+
+/* Elegant Dark Theme Global Overrides */
+.dark body,
+.dark .bg-slate-950 {
+  background-color: #0a0a0b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Panel Backgrounds */
+.dark .bg-slate-900,
+.dark .bg-slate-900\/90,
+.dark .bg-slate-900\/80 {
+  background-color: #0f0f12 !important;
+}
+
+/* Card Backgrounds */
+.dark .bg-white,
+.dark .bg-slate-900\/40,
+.dark .bg-slate-900\/60 {
+  background-color: #151518 !important;
+}
+
+/* Darker/Inner/Table Headers Backgrounds */
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-slate-100\/40,
+.dark .bg-slate-950\/20,
+.dark .bg-[#050507] {
+  background-color: #050507 !important;
+}
+
+/* Hover States */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-50\/50:hover,
+.dark .dark\:hover\:bg-slate-800\/10:hover {
+  background-color: rgba(31, 41, 55, 0.4) !important;
+}
+
+/* Border Skins */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-800,
+.dark .border-slate-700,
+.dark .border-gray-200 {
+  border-color: #1f2937 !important;
+}
+
+/* Text Skin Adaptations */
+.dark .text-slate-800,
+.dark .text-slate-900 {
+  color: #f3f4f6 !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: #9ca3af !important;
+}
+
+/* UI Accent Blue-ifications (except green profit or red loss stats) */
+.dark .bg-emerald-600:not(.bg-emerald-500\/10) {
+  background-color: #2563eb !important;
+}
+
+.dark .text-emerald-600:not(.text-emerald-500\/10) {
+  color: #60a5fa !important;
+}
+
+/* Custom Scrollbars in Elegant Dark */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(31, 41, 55, 0.6) !important;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Input Fields inside Elegant Dark */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  background-color: #050507 !important;
+  border-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):focus,
+.dark select:focus,
+.dark textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+}
