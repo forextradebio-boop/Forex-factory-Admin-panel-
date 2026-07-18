@@ -2,6 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Upload, Trash2, CheckCircle, Save, Loader2 } from 'lucide-react';
 import { api } from '../services/api'; // Assuming standard api service is present
 
+const getQrImageUrl = (imagePath?: string) => {
+  if (!imagePath) return '';
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
+
+  const base = (import.meta.env.VITE_API_URL as string | undefined) || 'https://forex-backend-63xj.onrender.com/api';
+  const normalizedBase = base.replace(/\/$/, '').replace(/\/api$/, '');
+
+  if (imagePath.startsWith('/uploads/')) {
+    return `${normalizedBase}/api/uploads/${imagePath.split('/uploads/')[1]}`;
+  }
+
+  if (imagePath.startsWith('/api/uploads/')) {
+    return `${normalizedBase}${imagePath}`;
+  }
+
+  return `${normalizedBase}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
+};
+
 export const PaymentSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upi' | 'bank'>('upi');
   const [loading, setLoading] = useState(false);
@@ -192,7 +210,17 @@ export const PaymentSettings: React.FC = () => {
                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-lg">
                       {settings.qrImage ? (
                         <div className="space-y-2 text-center">
-                          <img src={`${((import.meta as any).env?.VITE_API_URL || 'http://localhost:8000').replace('/api', '')}${settings.qrImage}`} alt="QR Code" className="mx-auto h-32 w-32 object-contain rounded bg-white p-2" />
+                          <img
+                            src={getQrImageUrl(settings.qrImage)}
+                            alt="QR Code"
+                            className="mx-auto h-32 w-32 object-contain rounded bg-white p-2"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              if (target.src.includes('/api/uploads/')) {
+                                target.src = target.src.replace('/api/uploads/', '/uploads/');
+                              }
+                            }}
+                          />
                           <div className="flex justify-center gap-2">
                             <button onClick={handleDeleteQR} disabled={uploading} className="text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1">
                               <Trash2 size={14} /> Remove

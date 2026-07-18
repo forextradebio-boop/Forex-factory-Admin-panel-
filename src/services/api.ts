@@ -11,13 +11,23 @@ export const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach JWT token if stored
+// Request Interceptor: Attach JWT token if stored and normalize API paths
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("admin_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const url = config.url || "";
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      const baseUrl = typeof config.baseURL === "string" ? config.baseURL : "";
+      const baseHasApi = baseUrl.includes("/api");
+      if (!baseHasApi && !url.startsWith("/api") && !url.startsWith("/uploads")) {
+        config.url = `/api${url.startsWith("/") ? url : `/${url}`}`;
+      }
+    }
+
     return config;
   },
   (error) => {
