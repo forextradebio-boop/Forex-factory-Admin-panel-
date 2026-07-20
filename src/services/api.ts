@@ -1,9 +1,18 @@
 import axios from "axios";
 
-// Read API Base URL from Vite environment, fallback to the live Render backend
-export const API_BASE_URL =
-  ((import.meta as any).env?.VITE_API_URL as string) ||
-  "https://forex-backend-iem1.onrender.com/api";
+const LIVE_API_BASE_URL = "https://forex-backend-iem1.onrender.com/api";
+
+// Prefer the live backend and ignore stale deployment values from older Vercel envs.
+export const API_BASE_URL = (() => {
+  const configuredUrl = ((import.meta as any).env?.VITE_API_URL as string | undefined)?.trim();
+
+  if (!configuredUrl) return LIVE_API_BASE_URL;
+  if (configuredUrl.includes("forex-backend-63xj") || configuredUrl.includes("forex-backend-iem1")) {
+    return LIVE_API_BASE_URL;
+  }
+
+  return configuredUrl;
+})();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
