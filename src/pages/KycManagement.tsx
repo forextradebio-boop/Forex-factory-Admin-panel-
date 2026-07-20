@@ -17,27 +17,40 @@ import {
 
 const getAssetCandidates = (value?: string) => {
   if (!value) return [] as string[];
-  if (/^data:image\//i.test(value) || /^blob:/i.test(value)) return [value];
-  if (/^https?:\/\//i.test(value)) return [value];
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return [] as string[];
+  if (/^data:image\//i.test(trimmedValue) || /^blob:/i.test(trimmedValue)) return [trimmedValue];
+  if (/^https?:\/\//i.test(trimmedValue)) return [trimmedValue];
 
-  const base = (import.meta.env.VITE_API_URL as string | undefined) || "https://forex-backend-iem1.onrender.com/api";
-  const normalizedBase = base.replace(/\/$/, "").replace(/\/api$/, "");
-  const apiBase = base.replace(/\/$/, "");
+  const configuredBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "https://forex-backend-iem1.onrender.com/api";
+  const apiBase = configuredBase.replace(/\/$/, "");
+  const normalizedBase = apiBase.replace(/\/api$/, "");
+  const originBase = typeof window !== "undefined" ? window.location.origin : "https://forex-backend-iem1.onrender.com";
   const candidates = new Set<string>();
 
-  if (value.startsWith("/uploads/")) {
-    candidates.add(`${normalizedBase}${value}`);
-    candidates.add(`${apiBase}/uploads/${value.split("/uploads/")[1]}`);
-    candidates.add(`${normalizedBase}/api/uploads/${value.split("/uploads/")[1]}`);
-  } else if (value.startsWith("/api/uploads/")) {
-    candidates.add(`${normalizedBase}${value}`);
-    candidates.add(`${normalizedBase}${value.replace("/api/uploads/", "/uploads/")}`);
-  } else if (value.startsWith("uploads/")) {
-    candidates.add(`${normalizedBase}/${value}`);
-    candidates.add(`${apiBase}/uploads/${value.replace(/^uploads\//, "")}`);
+  const addCandidate = (candidate?: string) => {
+    if (candidate) candidates.add(candidate);
+  };
+
+  const withLeadingSlash = trimmedValue.startsWith("/") ? trimmedValue : `/${trimmedValue}`;
+
+  if (trimmedValue.startsWith("/uploads/")) {
+    addCandidate(`${originBase}${withLeadingSlash}`);
+    addCandidate(`${normalizedBase}${withLeadingSlash}`);
+    addCandidate(`${apiBase}/uploads/${trimmedValue.split("/uploads/")[1]}`);
+    addCandidate(`${normalizedBase}/api/uploads/${trimmedValue.split("/uploads/")[1]}`);
+  } else if (trimmedValue.startsWith("/api/uploads/")) {
+    addCandidate(`${originBase}${trimmedValue}`);
+    addCandidate(`${normalizedBase}${trimmedValue}`);
+    addCandidate(`${normalizedBase}${trimmedValue.replace("/api/uploads/", "/uploads/")}`);
+  } else if (trimmedValue.startsWith("uploads/")) {
+    addCandidate(`${originBase}/${trimmedValue}`);
+    addCandidate(`${normalizedBase}/${trimmedValue}`);
+    addCandidate(`${apiBase}/uploads/${trimmedValue.replace(/^uploads\//, "")}`);
   } else {
-    candidates.add(`${normalizedBase}${value.startsWith("/") ? value : `/${value}`}`);
-    candidates.add(`${apiBase}${value.startsWith("/") ? value : `/${value}`}`);
+    addCandidate(`${originBase}${withLeadingSlash}`);
+    addCandidate(`${normalizedBase}${withLeadingSlash}`);
+    addCandidate(`${apiBase}${withLeadingSlash}`);
   }
 
   return Array.from(candidates);
@@ -65,6 +78,7 @@ const ImagePreview: React.FC<{ value?: string; alt: string }> = ({ value, alt })
 
   return (
     <img
+      key={`${alt}-${value || "empty"}`}
       src={currentSrc || candidates[0] || ""}
       alt={alt}
       referrerPolicy="no-referrer"
