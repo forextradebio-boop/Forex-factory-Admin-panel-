@@ -142,8 +142,8 @@ export const adminService = {
       accountHolderName: kyc.accountHolderName,
       aadharDocument: kyc.aadharDocument,
       panDocument: kyc.panDocument,
-      frontImage: kyc.aadharDocument || (kyc.documents && kyc.documents[0]) || "",
-      selfieImage: kyc.panDocument || (kyc.documents && kyc.documents[1]) || "",
+      frontImage: kyc.aadharDocument || kyc.frontImage || (kyc.documents && kyc.documents[0]) || "",
+      selfieImage: kyc.panDocument || kyc.selfieImage || (kyc.documents && kyc.documents[1]) || "",
       status: kyc.status,
       adminNotes: kyc.adminNotes,
       submittedAt: kyc.createdAt
