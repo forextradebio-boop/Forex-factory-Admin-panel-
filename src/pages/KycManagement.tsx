@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "../services/admin.service";
+import { API_BASE_URL } from "../services/api";
 import { TableSkeleton } from "../components/Skeletons";
 import { KycDocument, KycStatus } from "../types";
 import { 
@@ -19,7 +20,7 @@ const normalizeImageValue = (value?: unknown) => {
   if (!value) return "";
   if (typeof value === "string") {
     const trimmed = value.trim();
-    return /^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed) || /\/uploads\//i.test(trimmed) || /^uploads\//i.test(trimmed) || /^\/api\/uploads\//i.test(trimmed) ? trimmed : "";
+    return trimmed;
   }
   if (Array.isArray(value)) {
     for (const item of value) {
@@ -44,43 +45,41 @@ const getAssetCandidates = (value?: unknown) => {
   if (/^data:image\//i.test(trimmedValue) || /^blob:/i.test(trimmedValue)) return [trimmedValue];
   if (/^https?:\/\//i.test(trimmedValue)) return [trimmedValue];
 
-  const configuredBase = (import.meta.env.VITE_API_URL as string | undefined)?.trim() || "https://forex-backend-iem1.onrender.com/api";
-  const apiBase = configuredBase.replace(/\/$/, "");
-  const normalizedBase = apiBase.replace(/\/api$/, "");
-  const originBase = typeof window !== "undefined" ? window.location.origin : "https://forex-backend-iem1.onrender.com";
   const candidates = new Set<string>();
+  const configuredBase = (API_BASE_URL || "https://forex-backend-iem1.onrender.com/api").replace(/\/$/, "");
+  const apiBase = configuredBase;
+  const normalizedBase = apiBase.replace(/\/api$/, "");
+  const pathValue = trimmedValue.replace(/\\/g, "/");
+  const normalizedPath = pathValue.replace(/^https?:\/\/[^/]+/i, "");
+  const withLeadingSlash = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
 
   const addCandidate = (candidate?: string) => {
     if (candidate) candidates.add(candidate);
   };
 
-  const pathValue = trimmedValue.replace(/^https?:\/\/[^/]+/i, "").replace(/\\/g, "/");
-  const withLeadingSlash = pathValue.startsWith("/") ? pathValue : `/${pathValue}`;
+  addCandidate(`${normalizedBase}${withLeadingSlash}`);
+  addCandidate(`${apiBase}${withLeadingSlash}`);
+  addCandidate(`${normalizedBase}${withLeadingSlash.replace(/^\/api/, "")}`);
 
-  if (pathValue.includes("/uploads/")) {
-    const relativePath = pathValue.replace(/\/api(?=\/uploads)/i, "");
-    addCandidate(`${originBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
+  if (normalizedPath.includes("/uploads/")) {
+    const relativePath = normalizedPath.replace(/\/api(?=\/uploads)/i, "");
     addCandidate(`${normalizedBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
     addCandidate(`${apiBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
-    addCandidate(`${normalizedBase}${withLeadingSlash.replace(/\/api(?=\/uploads)/i, "")}`);
-  } else if (pathValue.startsWith("uploads/")) {
-    addCandidate(`${originBase}/${pathValue}`);
-    addCandidate(`${normalizedBase}/${pathValue}`);
-    addCandidate(`${apiBase}/uploads/${pathValue.replace(/^uploads\//, "")}`);
-  } else if (pathValue.startsWith("/api/uploads/")) {
-    addCandidate(`${originBase}${pathValue}`);
-    addCandidate(`${normalizedBase}${pathValue}`);
-    addCandidate(`${normalizedBase}${pathValue.replace("/api/uploads/", "/uploads/")}`);
-  } else if (pathValue.startsWith("/uploads/")) {
-    addCandidate(`${originBase}${pathValue}`);
-    addCandidate(`${normalizedBase}${pathValue}`);
-    addCandidate(`${apiBase}${pathValue}`);
-  } else {
-    addCandidate(`${originBase}${withLeadingSlash}`);
-    addCandidate(`${normalizedBase}${withLeadingSlash}`);
-    addCandidate(`${apiBase}${withLeadingSlash}`);
-    addCandidate(`${normalizedBase}/uploads/${pathValue.replace(/^\//, "")}`);
-    addCandidate(`${apiBase}/uploads/${pathValue.replace(/^\//, "")}`);
+  }
+
+  if (normalizedPath.startsWith("/uploads/")) {
+    addCandidate(`${normalizedBase}${normalizedPath}`);
+    addCandidate(`${apiBase}${normalizedPath}`);
+  }
+
+  if (normalizedPath.startsWith("/api/uploads/")) {
+    addCandidate(`${normalizedBase}${normalizedPath.replace("/api/uploads/", "/uploads/")}`);
+    addCandidate(`${apiBase}${normalizedPath}`);
+  }
+
+  if (normalizedPath.startsWith("uploads/")) {
+    addCandidate(`${normalizedBase}/${normalizedPath}`);
+    addCandidate(`${apiBase}/uploads/${normalizedPath.replace(/^uploads\//, "")}`);
   }
 
   return Array.from(candidates);
