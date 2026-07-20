@@ -15,9 +15,19 @@ import {
   FileText 
 } from "lucide-react";
 
-const getAssetCandidates = (value?: string) => {
-  if (!value) return [] as string[];
-  const trimmedValue = value.trim();
+const normalizeImageValue = (value?: unknown) => {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return normalizeImageValue(value.find(Boolean));
+  if (typeof value === "object") {
+    const candidate = (value as Record<string, unknown>).url || (value as Record<string, unknown>).src || (value as Record<string, unknown>).path || (value as Record<string, unknown>).image;
+    return normalizeImageValue(candidate);
+  }
+  return "";
+};
+
+const getAssetCandidates = (value?: unknown) => {
+  const trimmedValue = normalizeImageValue(value);
   if (!trimmedValue) return [] as string[];
   if (/^data:image\//i.test(trimmedValue) || /^blob:/i.test(trimmedValue)) return [trimmedValue];
   if (/^https?:\/\//i.test(trimmedValue)) return [trimmedValue];
@@ -32,25 +42,33 @@ const getAssetCandidates = (value?: string) => {
     if (candidate) candidates.add(candidate);
   };
 
-  const withLeadingSlash = trimmedValue.startsWith("/") ? trimmedValue : `/${trimmedValue}`;
+  const pathValue = trimmedValue.replace(/^https?:\/\/[^/]+/i, "").replace(/\\/g, "/");
+  const withLeadingSlash = pathValue.startsWith("/") ? pathValue : `/${pathValue}`;
 
-  if (trimmedValue.startsWith("/uploads/")) {
-    addCandidate(`${originBase}${withLeadingSlash}`);
-    addCandidate(`${normalizedBase}${withLeadingSlash}`);
-    addCandidate(`${apiBase}/uploads/${trimmedValue.split("/uploads/")[1]}`);
-    addCandidate(`${normalizedBase}/api/uploads/${trimmedValue.split("/uploads/")[1]}`);
-  } else if (trimmedValue.startsWith("/api/uploads/")) {
-    addCandidate(`${originBase}${trimmedValue}`);
-    addCandidate(`${normalizedBase}${trimmedValue}`);
-    addCandidate(`${normalizedBase}${trimmedValue.replace("/api/uploads/", "/uploads/")}`);
-  } else if (trimmedValue.startsWith("uploads/")) {
-    addCandidate(`${originBase}/${trimmedValue}`);
-    addCandidate(`${normalizedBase}/${trimmedValue}`);
-    addCandidate(`${apiBase}/uploads/${trimmedValue.replace(/^uploads\//, "")}`);
+  if (pathValue.includes("/uploads/")) {
+    const relativePath = pathValue.replace(/\/api(?=\/uploads)/i, "");
+    addCandidate(`${originBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
+    addCandidate(`${normalizedBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
+    addCandidate(`${apiBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
+    addCandidate(`${normalizedBase}${withLeadingSlash.replace(/\/api(?=\/uploads)/i, "")}`);
+  } else if (pathValue.startsWith("uploads/")) {
+    addCandidate(`${originBase}/${pathValue}`);
+    addCandidate(`${normalizedBase}/${pathValue}`);
+    addCandidate(`${apiBase}/uploads/${pathValue.replace(/^uploads\//, "")}`);
+  } else if (pathValue.startsWith("/api/uploads/")) {
+    addCandidate(`${originBase}${pathValue}`);
+    addCandidate(`${normalizedBase}${pathValue}`);
+    addCandidate(`${normalizedBase}${pathValue.replace("/api/uploads/", "/uploads/")}`);
+  } else if (pathValue.startsWith("/uploads/")) {
+    addCandidate(`${originBase}${pathValue}`);
+    addCandidate(`${normalizedBase}${pathValue}`);
+    addCandidate(`${apiBase}${pathValue}`);
   } else {
     addCandidate(`${originBase}${withLeadingSlash}`);
     addCandidate(`${normalizedBase}${withLeadingSlash}`);
     addCandidate(`${apiBase}${withLeadingSlash}`);
+    addCandidate(`${normalizedBase}/uploads/${pathValue.replace(/^\//, "")}`);
+    addCandidate(`${apiBase}/uploads/${pathValue.replace(/^\//, "")}`);
   }
 
   return Array.from(candidates);
@@ -267,9 +285,9 @@ export const KycManagement: React.FC = () => {
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">AADHAAR CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
-                      {selectedDoc.frontImage ? (
+                      {selectedDoc.frontImage || selectedDoc.aadharDocument ? (
                         <>
-                          <ImagePreview value={selectedDoc.frontImage} alt="Aadhaar" />
+                          <ImagePreview value={selectedDoc.frontImage || selectedDoc.aadharDocument} alt="Aadhaar" />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <a href={selectedDoc.frontImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
@@ -286,9 +304,9 @@ export const KycManagement: React.FC = () => {
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">PAN CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
-                      {selectedDoc.selfieImage ? (
+                      {selectedDoc.selfieImage || selectedDoc.panDocument ? (
                         <>
-                          <ImagePreview value={selectedDoc.selfieImage} alt="PAN" />
+                          <ImagePreview value={selectedDoc.selfieImage || selectedDoc.panDocument} alt="PAN" />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <a href={selectedDoc.selfieImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
