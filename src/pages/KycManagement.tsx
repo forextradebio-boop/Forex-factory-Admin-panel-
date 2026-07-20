@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "../services/admin.service";
 import { TableSkeleton } from "../components/Skeletons";
@@ -15,26 +15,71 @@ import {
   FileText 
 } from "lucide-react";
 
-const getAssetUrl = (value?: string) => {
-  if (!value) return "";
-  if (/^https?:\/\//i.test(value)) return value;
+const getAssetCandidates = (value?: string) => {
+  if (!value) return [] as string[];
+  if (/^data:image\//i.test(value) || /^blob:/i.test(value)) return [value];
+  if (/^https?:\/\//i.test(value)) return [value];
 
   const base = (import.meta.env.VITE_API_URL as string | undefined) || "https://forex-backend-iem1.onrender.com/api";
   const normalizedBase = base.replace(/\/$/, "").replace(/\/api$/, "");
+  const apiBase = base.replace(/\/$/, "");
+  const candidates = new Set<string>();
 
   if (value.startsWith("/uploads/")) {
-    return `${normalizedBase}${value}`;
+    candidates.add(`${normalizedBase}${value}`);
+    candidates.add(`${apiBase}/uploads/${value.split("/uploads/")[1]}`);
+    candidates.add(`${normalizedBase}/api/uploads/${value.split("/uploads/")[1]}`);
+  } else if (value.startsWith("/api/uploads/")) {
+    candidates.add(`${normalizedBase}${value}`);
+    candidates.add(`${normalizedBase}${value.replace("/api/uploads/", "/uploads/")}`);
+  } else if (value.startsWith("uploads/")) {
+    candidates.add(`${normalizedBase}/${value}`);
+    candidates.add(`${apiBase}/uploads/${value.replace(/^uploads\//, "")}`);
+  } else {
+    candidates.add(`${normalizedBase}${value.startsWith("/") ? value : `/${value}`}`);
+    candidates.add(`${apiBase}${value.startsWith("/") ? value : `/${value}`}`);
   }
 
-  if (value.startsWith("/api/uploads/")) {
-    return `${normalizedBase}${value}`;
+  return Array.from(candidates);
+};
+
+const ImagePreview: React.FC<{ value?: string; alt: string }> = ({ value, alt }) => {
+  const [currentSrc, setCurrentSrc] = useState("");
+  const [attemptIndex, setAttemptIndex] = useState(0);
+  const [hasError, setHasError] = useState(false);
+  const candidates = getAssetCandidates(value);
+
+  useEffect(() => {
+    setCurrentSrc(candidates[0] || "");
+    setAttemptIndex(0);
+    setHasError(false);
+  }, [value]);
+
+  if (!value) {
+    return <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>;
   }
 
-  if (value.startsWith("uploads/")) {
-    return `${normalizedBase}/${value}`;
+  if (hasError) {
+    return <span className="text-xs text-slate-500 font-semibold uppercase">Unable to load image</span>;
   }
 
-  return `${normalizedBase}${value.startsWith("/") ? value : `/${value}`}`;
+  return (
+    <img
+      src={currentSrc || candidates[0] || ""}
+      alt={alt}
+      referrerPolicy="no-referrer"
+      className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
+      onError={() => {
+        if (attemptIndex + 1 < candidates.length) {
+          const nextIndex = attemptIndex + 1;
+          setAttemptIndex(nextIndex);
+          setCurrentSrc(candidates[nextIndex]);
+        } else {
+          setHasError(true);
+        }
+      }}
+    />
+  );
 };
 
 export const KycManagement: React.FC = () => {
@@ -210,19 +255,9 @@ export const KycManagement: React.FC = () => {
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.frontImage ? (
                         <>
-                          <img 
-                            src={getAssetUrl(selectedDoc.frontImage)} 
-                            alt="Aadhaar" 
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = "none";
-                              target.parentElement?.setAttribute("data-image-error", "true");
-                            }}
-                          />
+                          <ImagePreview value={selectedDoc.frontImage} alt="Aadhaar" />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={getAssetUrl(selectedDoc.frontImage)} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <a href={selectedDoc.frontImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
                             </a>
                           </div>
@@ -239,19 +274,9 @@ export const KycManagement: React.FC = () => {
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.selfieImage ? (
                         <>
-                          <img 
-                            src={getAssetUrl(selectedDoc.selfieImage)} 
-                            alt="PAN" 
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
-                            onError={(e) => {
-                              const target = e.currentTarget as HTMLImageElement;
-                              target.style.display = "none";
-                              target.parentElement?.setAttribute("data-image-error", "true");
-                            }}
-                          />
+                          <ImagePreview value={selectedDoc.selfieImage} alt="PAN" />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={getAssetUrl(selectedDoc.selfieImage)} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <a href={selectedDoc.selfieImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
                             </a>
                           </div>
