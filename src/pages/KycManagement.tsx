@@ -17,11 +17,23 @@ import {
 
 const normalizeImageValue = (value?: unknown) => {
   if (!value) return "";
-  if (typeof value === "string") return value.trim();
-  if (Array.isArray(value)) return normalizeImageValue(value.find(Boolean));
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return /^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed) || /\/uploads\//i.test(trimmed) || /^uploads\//i.test(trimmed) || /^\/api\/uploads\//i.test(trimmed) ? trimmed : "";
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = normalizeImageValue(item);
+      if (found) return found;
+    }
+    return "";
+  }
   if (typeof value === "object") {
-    const candidate = (value as Record<string, unknown>).url || (value as Record<string, unknown>).src || (value as Record<string, unknown>).path || (value as Record<string, unknown>).image;
-    return normalizeImageValue(candidate);
+    const candidateKeys = ["url", "src", "path", "image", "file", "document", "documentUrl", "fileUrl", "aadharDocument", "panDocument", "frontImage", "selfieImage", "aadharUrl", "panUrl", "aadharDocumentUrl", "panDocumentUrl"];
+    for (const key of candidateKeys) {
+      const candidate = normalizeImageValue((value as Record<string, unknown>)[key]);
+      if (candidate) return candidate;
+    }
   }
   return "";
 };
