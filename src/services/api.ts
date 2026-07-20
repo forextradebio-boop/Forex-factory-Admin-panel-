@@ -1,7 +1,9 @@
 import axios from "axios";
 
-// Read API Base URL from Vite environment, fallback to relative path /api
-export const API_BASE_URL = ((import.meta as any).env?.VITE_API_URL as string) || "/api";
+// Read API Base URL from Vite environment, fallback to the live Render backend
+export const API_BASE_URL =
+  ((import.meta as any).env?.VITE_API_URL as string) ||
+  "https://forex-backend-iem1.onrender.com/api";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
