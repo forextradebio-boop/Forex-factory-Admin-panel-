@@ -207,17 +207,22 @@ export const KycManagement: React.FC = () => {
                   {/* Aadhaar image */}
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">AADHAAR CARD IMAGE:</span>
-                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center">
+                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.frontImage ? (
                         <>
                           <img 
                             src={getAssetUrl(selectedDoc.frontImage)} 
                             alt="Aadhaar" 
                             referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = "none";
+                              target.parentElement?.setAttribute("data-image-error", "true");
+                            }}
                           />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={selectedDoc.frontImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <a href={getAssetUrl(selectedDoc.frontImage)} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
                             </a>
                           </div>
@@ -231,17 +236,22 @@ export const KycManagement: React.FC = () => {
                   {/* PAN image */}
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">PAN CARD IMAGE:</span>
-                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center">
+                    <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.selfieImage ? (
                         <>
                           <img 
                             src={getAssetUrl(selectedDoc.selfieImage)} 
                             alt="PAN" 
                             referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
+                            onError={(e) => {
+                              const target = e.currentTarget as HTMLImageElement;
+                              target.style.display = "none";
+                              target.parentElement?.setAttribute("data-image-error", "true");
+                            }}
                           />
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={selectedDoc.selfieImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <a href={getAssetUrl(selectedDoc.selfieImage)} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
                             </a>
                           </div>
