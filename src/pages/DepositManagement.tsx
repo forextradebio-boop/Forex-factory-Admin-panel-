@@ -16,6 +16,28 @@ import {
   FileText
 } from "lucide-react";
 
+const getAssetUrl = (value?: string) => {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base = (import.meta.env.VITE_API_URL as string | undefined) || "https://forex-backend-iem1.onrender.com/api";
+  const normalizedBase = base.replace(/\/$/, "").replace(/\/api$/, "");
+
+  if (value.startsWith("/uploads/")) {
+    return `${normalizedBase}${value}`;
+  }
+
+  if (value.startsWith("/api/uploads/")) {
+    return `${normalizedBase}${value}`;
+  }
+
+  if (value.startsWith("uploads/")) {
+    return `${normalizedBase}/${value}`;
+  }
+
+  return `${normalizedBase}${value.startsWith("/") ? value : `/${value}`}`;
+};
+
 export const DepositManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
@@ -261,7 +283,7 @@ export const DepositManagement: React.FC = () => {
                   {selectedDeposit.proofImage ? (
                     <>
                       <img 
-                        src={selectedDeposit.proofImage} 
+                        src={getAssetUrl(selectedDeposit.proofImage)} 
                         alt="Receipt payment proof" 
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover" 
