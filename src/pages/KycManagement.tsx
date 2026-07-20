@@ -15,6 +15,28 @@ import {
   FileText 
 } from "lucide-react";
 
+const getAssetUrl = (value?: string) => {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base = (import.meta.env.VITE_API_URL as string | undefined) || "https://forex-backend-iem1.onrender.com/api";
+  const normalizedBase = base.replace(/\/$/, "").replace(/\/api$/, "");
+
+  if (value.startsWith("/uploads/")) {
+    return `${normalizedBase}${value}`;
+  }
+
+  if (value.startsWith("/api/uploads/")) {
+    return `${normalizedBase}${value}`;
+  }
+
+  if (value.startsWith("uploads/")) {
+    return `${normalizedBase}/${value}`;
+  }
+
+  return `${normalizedBase}${value.startsWith("/") ? value : `/${value}`}`;
+};
+
 export const KycManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedDoc, setSelectedDoc] = useState<KycDocument | null>(null);
@@ -189,7 +211,7 @@ export const KycManagement: React.FC = () => {
                       {selectedDoc.frontImage ? (
                         <>
                           <img 
-                            src={selectedDoc.frontImage} 
+                            src={getAssetUrl(selectedDoc.frontImage)} 
                             alt="Aadhaar" 
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover" 
@@ -213,7 +235,7 @@ export const KycManagement: React.FC = () => {
                       {selectedDoc.selfieImage ? (
                         <>
                           <img 
-                            src={selectedDoc.selfieImage} 
+                            src={getAssetUrl(selectedDoc.selfieImage)} 
                             alt="PAN" 
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover" 
