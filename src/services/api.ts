@@ -44,8 +44,7 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
-    // Auto logout on 401 Unauthorized (unless it's already the login page)
+
     if (
       error.response &&
       error.response.status === 401 &&
@@ -53,17 +52,19 @@ api.interceptors.response.use(
       !originalRequest.url?.includes("/auth/login")
     ) {
       originalRequest._retry = true;
-      
-      // Clear token and reload or trigger event to notify AuthContext
       localStorage.removeItem("admin_token");
       localStorage.removeItem("admin_user");
-      
-      // Custom event to handle automatic logout in react application
       window.dispatchEvent(new Event("admin_session_expired"));
     }
-    
-    // Return standard error message or generic one
-    const message = error.response?.data?.message || error.message || "Something went wrong";
+
+    const payload = error.response?.data;
+    const message =
+      (typeof payload === "string" && payload) ||
+      payload?.message ||
+      payload?.error ||
+      error.message ||
+      "Something went wrong";
+
     return Promise.reject(new Error(message));
   }
 );
