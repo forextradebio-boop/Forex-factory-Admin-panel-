@@ -39,13 +39,15 @@ export const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: ["dashboardStats"],
     queryFn: () => adminService.getDashboardStats(),
-    refetchInterval: 10000, // Poll statistics every 10s
+    refetchInterval: 10000,
+    retry: false,
   });
 
-  const { data: platformStatus } = useQuery({
+  const { data: platformStatus, error: platformError } = useQuery({
     queryKey: ["platformStatus"],
     queryFn: () => adminService.getPlatformStatus(),
     refetchInterval: 5000,
+    retry: false,
   });
 
   // Derived state
@@ -102,9 +104,12 @@ export const Dashboard: React.FC = () => {
       {statsError ? (
         <div className="p-6 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
           <h3 className="font-bold flex items-center gap-2">
-            <XCircle size={18} /> Error Loading Dashboard
+            <XCircle size={18} /> Dashboard unavailable
           </h3>
-          <p className="text-sm mt-1">{(statsError as Error).message || "An unexpected network error occurred."}</p>
+          <p className="text-sm mt-1">{(statsError as Error).message || "The admin dashboard could not be loaded. Please sign in again or try again shortly."}</p>
+          {platformError ? (
+            <p className="text-xs mt-2">Platform status could not be loaded as well.</p>
+          ) : null}
         </div>
       ) : statsLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
