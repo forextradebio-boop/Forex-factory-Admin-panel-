@@ -24,6 +24,22 @@ import {
   GraphSettings
 } from "../types";
 
+const buildKycImageUrl = (value?: string) => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const base = (API_BASE_URL || "https://forex-backend-iem1.onrender.com/api").replace(/\/$/, "");
+  const rootBase = base.replace(/\/api$/, "");
+
+  if (trimmed.startsWith("/uploads/")) return `${rootBase}${trimmed}`;
+  if (trimmed.startsWith("/api/uploads/")) return `${rootBase}${trimmed.replace("/api", "")}`;
+  if (trimmed.startsWith("uploads/")) return `${rootBase}/${trimmed}`;
+  if (trimmed.startsWith("/")) return `${rootBase}${trimmed}`;
+  return `${rootBase}/${trimmed}`;
+};
+
 export const adminService = {
   // --- AUTH SERVICES ---
   async login(email: string, password: string): Promise<{ token: string; user: any }> {
@@ -150,8 +166,10 @@ export const adminService = {
     };
 
     return (res.data.kycRequests || []).map((kyc: any) => {
-      const frontImage = extractImageValue(kyc.aadharDocument || kyc.frontImage || kyc.aadharDocumentUrl || kyc.aadharUrl) || extractImageValue(kyc.documents?.[0] || kyc.documents);
-      const selfieImage = extractImageValue(kyc.panDocument || kyc.selfieImage || kyc.panDocumentUrl || kyc.panUrl) || extractImageValue(kyc.documents?.[1] || kyc.documents);
+      const frontImageRaw = extractImageValue(kyc.aadharDocument || kyc.frontImage || kyc.aadharDocumentUrl || kyc.aadharUrl) || extractImageValue(kyc.documents?.[0] || kyc.documents);
+      const selfieImageRaw = extractImageValue(kyc.panDocument || kyc.selfieImage || kyc.panDocumentUrl || kyc.panUrl) || extractImageValue(kyc.documents?.[1] || kyc.documents);
+      const frontImage = buildKycImageUrl(frontImageRaw);
+      const selfieImage = buildKycImageUrl(selfieImageRaw);
 
       return {
         ...kyc,
