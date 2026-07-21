@@ -32,6 +32,7 @@ import {
   Tooltip 
 } from "recharts";
 import { Link } from "react-router-dom";
+import { UniversalCurrencyCalculator } from "../components/UniversalCurrencyCalculator";
 
 export const Dashboard: React.FC = () => {
   const [activeChartTab, setActiveChartTab] = useState<"deposits" | "withdrawals" | "users" | "volume">("deposits");
@@ -265,6 +266,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Universal Currency Calculator Widget */}
+      <div className="mb-6">
+        <UniversalCurrencyCalculator />
       </div>
 
       {/* Tables Row: Recent Registrations, Withdrawals, and Deposits */}
