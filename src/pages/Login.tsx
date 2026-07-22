@@ -5,7 +5,7 @@ import { Lock, Mail, Eye, EyeOff, KeyRound, ShieldAlert, Sparkles, LogIn } from 
 export const Login: React.FC = () => {
   const { login, verifyOtp } = useAuth();
   const [email, setEmail] = useState("admin@trading.com");
-  const [password, setPassword] = useState("admin123");
+  const [password, setPassword] = useState("Admin@1234");
   const [rememberMe, setRememberMe] = useState(true);
   
   const [showPassword, setShowPassword] = useState(false);
