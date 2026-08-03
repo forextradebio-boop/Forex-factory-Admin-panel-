@@ -44,6 +44,14 @@ const getAssetCandidates = (value?: unknown) => {
   if (!trimmedValue) return [] as string[];
   if (/^data:image\//i.test(trimmedValue) || /^blob:/i.test(trimmedValue)) return [trimmedValue];
   if (/^https?:\/\//i.test(trimmedValue)) return [trimmedValue];
+  if (/^(?:[A-Za-z0-9+/]{20,}={0,2})$/.test(trimmedValue)) {
+    return [
+      `data:image/jpeg;base64,${trimmedValue}`,
+      `data:image/png;base64,${trimmedValue}`,
+      `data:image/webp;base64,${trimmedValue}`,
+      `data:image/gif;base64,${trimmedValue}`,
+    ];
+  }
 
   const candidates = new Set<string>();
   const configuredBase = (API_BASE_URL || "https://forex-backend-iem1.onrender.com/api").replace(/\/$/, "");
@@ -85,7 +93,7 @@ const getAssetCandidates = (value?: unknown) => {
   return Array.from(candidates);
 };
 
-const ImagePreview: React.FC<{ value?: string; alt: string }> = ({ value, alt }) => {
+const ImagePreview: React.FC<{ value?: string; alt: string; className?: string; onClick?: () => void }> = ({ value, alt, className, onClick }) => {
   const [currentSrc, setCurrentSrc] = useState("");
   const [attemptIndex, setAttemptIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
@@ -111,7 +119,16 @@ const ImagePreview: React.FC<{ value?: string; alt: string }> = ({ value, alt })
       src={currentSrc || candidates[0] || ""}
       alt={alt}
       referrerPolicy="no-referrer"
-      className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2"
+      className={className || "w-full h-full object-contain bg-white dark:bg-slate-950 p-2"}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      } : undefined}
       onError={() => {
         if (attemptIndex + 1 < candidates.length) {
           const nextIndex = attemptIndex + 1;
@@ -131,6 +148,8 @@ export const KycManagement: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionForm, setShowRejectionForm] = useState(false);
   const [isBlockUser, setIsBlockUser] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewAlt, setPreviewAlt] = useState("");
 
   // Queries
   const { data: documents, isLoading, isError, error } = useQuery({
@@ -168,6 +187,18 @@ export const KycManagement: React.FC = () => {
         onSuccess: () => alert("KYC Approved Successfully.")
       });
     }
+  };
+
+  const openImagePreview = (value?: string, alt = "Document preview") => {
+    if (value) {
+      setPreviewImage(value);
+      setPreviewAlt(alt);
+    }
+  };
+
+  const closeImagePreview = () => {
+    setPreviewImage(null);
+    setPreviewAlt("");
   };
 
   const handleRejectSubmit = (e: React.FormEvent) => {
@@ -298,11 +329,13 @@ export const KycManagement: React.FC = () => {
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.frontImage || selectedDoc.aadharDocument ? (
                         <>
-                          <ImagePreview value={selectedDoc.frontImage || selectedDoc.aadharDocument} alt="Aadhaar" />
+                          <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(selectedDoc.frontImage || selectedDoc.aadharDocument, "Aadhaar") }>
+                            <ImagePreview value={selectedDoc.frontImage || selectedDoc.aadharDocument} alt="Aadhaar" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
+                          </div>
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={selectedDoc.frontImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <button type="button" onClick={() => openImagePreview(selectedDoc.frontImage || selectedDoc.aadharDocument, "Aadhaar")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
-                            </a>
+                            </button>
                           </div>
                         </>
                       ) : (
@@ -317,11 +350,13 @@ export const KycManagement: React.FC = () => {
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {selectedDoc.selfieImage || selectedDoc.panDocument ? (
                         <>
-                          <ImagePreview value={selectedDoc.selfieImage || selectedDoc.panDocument} alt="PAN" />
+                          <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(selectedDoc.selfieImage || selectedDoc.panDocument, "PAN") }>
+                            <ImagePreview value={selectedDoc.selfieImage || selectedDoc.panDocument} alt="PAN" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
+                          </div>
                           <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a href={selectedDoc.selfieImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                            <button type="button" onClick={() => openImagePreview(selectedDoc.selfieImage || selectedDoc.panDocument, "PAN")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
                               <Eye size={16} />
-                            </a>
+                            </button>
                           </div>
                         </>
                       ) : (
@@ -414,6 +449,23 @@ export const KycManagement: React.FC = () => {
         </div>
 
       </div>
+
+      {previewImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onClick={closeImagePreview}>
+          <div className="relative max-w-[95vw] max-h-[90vh] w-full flex items-center justify-center" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              onClick={closeImagePreview}
+              className="absolute right-3 top-3 z-10 rounded-full bg-slate-900/80 p-2 text-slate-100 shadow-lg hover:bg-slate-800"
+            >
+              <X size={18} />
+            </button>
+            <div className="overflow-auto rounded-2xl bg-white p-3 shadow-2xl dark:bg-slate-950">
+              <ImagePreview value={previewImage} alt={previewAlt} className="max-h-[80vh] max-w-[90vw] object-contain rounded-xl" />
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
