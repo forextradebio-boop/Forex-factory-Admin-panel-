@@ -107,13 +107,16 @@ const ImagePreview: React.FC<{ value?: string; alt: string; className?: string; 
   const [currentSrc, setCurrentSrc] = useState("");
   const [attemptIndex, setAttemptIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
+  const [debugUrl, setDebugUrl] = useState("");
   const candidates = getAssetCandidates(value);
 
   useEffect(() => {
-    setCurrentSrc(candidates[0] || "");
+    const firstCandidate = candidates[0] || "";
+    setCurrentSrc(firstCandidate);
     setAttemptIndex(0);
     setHasError(false);
-  }, [value]);
+    setDebugUrl(firstCandidate);
+  }, [value, candidates[0]]);
 
   if (!value) {
     return <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>;
@@ -123,39 +126,43 @@ const ImagePreview: React.FC<{ value?: string; alt: string; className?: string; 
     return (
       <div className="flex flex-col items-center justify-center gap-2 text-center px-3 py-4">
         <span className="text-xs text-slate-500 font-semibold uppercase">Unable to load image</span>
-        <a href={candidates[0] || value} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline">
-          Open image in new tab
+        <a href={debugUrl || candidates[0] || value} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline break-all">
+          {debugUrl || candidates[0] || value}
         </a>
       </div>
     );
   }
 
   return (
-    <img
-      key={`${alt}-${value || "empty"}`}
-      src={currentSrc || candidates[0] || ""}
-      alt={alt}
-      referrerPolicy="no-referrer"
-      className={className || "w-full h-full object-contain bg-white dark:bg-slate-950 p-2"}
-      onClick={onClick}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onClick();
-        }
-      } : undefined}
-      onError={() => {
-        if (attemptIndex + 1 < candidates.length) {
-          const nextIndex = attemptIndex + 1;
-          setAttemptIndex(nextIndex);
-          setCurrentSrc(candidates[nextIndex]);
-        } else {
-          setHasError(true);
-        }
-      }}
-    />
+    <div className="w-full h-full">
+      <img
+        key={`${alt}-${value || "empty"}`}
+        src={currentSrc || candidates[0] || value || ""}
+        alt={alt}
+        referrerPolicy="no-referrer"
+        className={className || "w-full h-full object-contain bg-white dark:bg-slate-950 p-2"}
+        onClick={onClick}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onKeyDown={onClick ? (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        } : undefined}
+        onError={() => {
+          if (attemptIndex + 1 < candidates.length) {
+            const nextIndex = attemptIndex + 1;
+            setAttemptIndex(nextIndex);
+            const nextSrc = candidates[nextIndex];
+            setCurrentSrc(nextSrc);
+            setDebugUrl(nextSrc);
+          } else {
+            setHasError(true);
+          }
+        }}
+      />
+    </div>
   );
 };
 
