@@ -65,30 +65,40 @@ const getAssetCandidates = (value?: unknown) => {
     if (candidate) candidates.add(candidate);
   };
 
-  addCandidate(`${normalizedBase}${withLeadingSlash}`);
-  addCandidate(`${apiBase}${withLeadingSlash}`);
-  addCandidate(`${normalizedBase}${withLeadingSlash.replace(/^\/api/, "")}`);
+  const baseCandidates = [
+    normalizedBase,
+    apiBase,
+    typeof window !== "undefined" ? window.location.origin : "",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://forex-backend-iem1.onrender.com",
+    "https://forex-backend-iem1.onrender.com/api",
+  ].filter(Boolean) as string[];
 
-  if (normalizedPath.includes("/uploads/")) {
-    const relativePath = normalizedPath.replace(/\/api(?=\/uploads)/i, "");
-    addCandidate(`${normalizedBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
-    addCandidate(`${apiBase}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
-  }
+  baseCandidates.forEach((base) => {
+    const normalizedBaseUrl = base.replace(/\/$/, "");
+    addCandidate(`${normalizedBaseUrl}${withLeadingSlash}`);
+    addCandidate(`${normalizedBaseUrl}${withLeadingSlash.replace(/^\/api/, "")}`);
 
-  if (normalizedPath.startsWith("/uploads/")) {
-    addCandidate(`${normalizedBase}${normalizedPath}`);
-    addCandidate(`${apiBase}${normalizedPath}`);
-  }
+    if (normalizedPath.includes("/uploads/")) {
+      const relativePath = normalizedPath.replace(/\/api(?=\/uploads)/i, "");
+      addCandidate(`${normalizedBaseUrl}${relativePath.startsWith("/") ? relativePath : `/${relativePath}`}`);
+    }
 
-  if (normalizedPath.startsWith("/api/uploads/")) {
-    addCandidate(`${normalizedBase}${normalizedPath.replace("/api/uploads/", "/uploads/")}`);
-    addCandidate(`${apiBase}${normalizedPath}`);
-  }
+    if (normalizedPath.startsWith("/uploads/")) {
+      addCandidate(`${normalizedBaseUrl}${normalizedPath}`);
+    }
 
-  if (normalizedPath.startsWith("uploads/")) {
-    addCandidate(`${normalizedBase}/${normalizedPath}`);
-    addCandidate(`${apiBase}/uploads/${normalizedPath.replace(/^uploads\//, "")}`);
-  }
+    if (normalizedPath.startsWith("/api/uploads/")) {
+      addCandidate(`${normalizedBaseUrl}${normalizedPath.replace("/api/uploads/", "/uploads/")}`);
+      addCandidate(`${normalizedBaseUrl}${normalizedPath}`);
+    }
+
+    if (normalizedPath.startsWith("uploads/")) {
+      addCandidate(`${normalizedBaseUrl}/${normalizedPath}`);
+      addCandidate(`${normalizedBaseUrl}/uploads/${normalizedPath.replace(/^uploads\//, "")}`);
+    }
+  });
 
   return Array.from(candidates);
 };
@@ -110,7 +120,14 @@ const ImagePreview: React.FC<{ value?: string; alt: string; className?: string; 
   }
 
   if (hasError) {
-    return <span className="text-xs text-slate-500 font-semibold uppercase">Unable to load image</span>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 text-center px-3 py-4">
+        <span className="text-xs text-slate-500 font-semibold uppercase">Unable to load image</span>
+        <a href={candidates[0] || value} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline">
+          Open image in new tab
+        </a>
+      </div>
+    );
   }
 
   return (
@@ -327,20 +344,23 @@ export const KycManagement: React.FC = () => {
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">AADHAAR CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
-                      {selectedDoc.frontImage || selectedDoc.aadharDocument ? (
-                        <>
-                          <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(selectedDoc.frontImage || selectedDoc.aadharDocument, "Aadhaar") }>
-                            <ImagePreview value={selectedDoc.frontImage || selectedDoc.aadharDocument} alt="Aadhaar" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
-                          </div>
-                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button type="button" onClick={() => openImagePreview(selectedDoc.frontImage || selectedDoc.aadharDocument, "Aadhaar")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
-                              <Eye size={16} />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
-                      )}
+                      {(() => {
+                        const aadhaarValue = selectedDoc.frontImage || selectedDoc.aadharDocument || (Array.isArray((selectedDoc as any)?.documents) ? (selectedDoc as any).documents[0] : "");
+                        return aadhaarValue ? (
+                          <>
+                            <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(aadhaarValue, "Aadhaar") }>
+                              <ImagePreview value={aadhaarValue} alt="Aadhaar" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
+                            </div>
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button type="button" onClick={() => openImagePreview(aadhaarValue, "Aadhaar")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                                <Eye size={16} />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -348,20 +368,23 @@ export const KycManagement: React.FC = () => {
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">PAN CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
-                      {selectedDoc.selfieImage || selectedDoc.panDocument ? (
-                        <>
-                          <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(selectedDoc.selfieImage || selectedDoc.panDocument, "PAN") }>
-                            <ImagePreview value={selectedDoc.selfieImage || selectedDoc.panDocument} alt="PAN" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
-                          </div>
-                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button type="button" onClick={() => openImagePreview(selectedDoc.selfieImage || selectedDoc.panDocument, "PAN")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
-                              <Eye size={16} />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
-                      )}
+                      {(() => {
+                        const panValue = selectedDoc.selfieImage || selectedDoc.panDocument || (Array.isArray((selectedDoc as any)?.documents) ? (selectedDoc as any).documents[1] : "");
+                        return panValue ? (
+                          <>
+                            <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(panValue, "PAN") }>
+                              <ImagePreview value={panValue} alt="PAN" className="w-full h-full object-contain bg-white dark:bg-slate-950 p-2 cursor-zoom-in" />
+                            </div>
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button type="button" onClick={() => openImagePreview(panValue, "PAN")} className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
+                                <Eye size={16} />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
