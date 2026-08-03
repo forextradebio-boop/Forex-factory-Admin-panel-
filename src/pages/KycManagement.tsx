@@ -52,7 +52,6 @@ const getAssetCandidates = (value?: unknown) => {
       `data:image/gif;base64,${trimmedValue}`,
     ];
   }
-
   const candidates = new Set<string>();
   const configuredBase = (API_BASE_URL || "https://forex-backend-iem1.onrender.com/api").replace(/\/$/, "");
   const apiBase = configuredBase;
@@ -123,21 +122,24 @@ const ImagePreview: React.FC<{ value?: string; alt: string; className?: string; 
   }
 
   if (hasError) {
+    const resolvedUrl = debugUrl || candidates[0] || value || "";
     return (
       <div className="flex flex-col items-center justify-center gap-2 text-center px-3 py-4">
         <span className="text-xs text-slate-500 font-semibold uppercase">Unable to load image</span>
-        <a href={debugUrl || candidates[0] || value} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline break-all">
-          {debugUrl || candidates[0] || value}
+        <a href={resolvedUrl} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline break-all">
+          {resolvedUrl}
         </a>
       </div>
     );
   }
 
+  const resolvedUrl = currentSrc || candidates[0] || value || "";
+
   return (
     <div className="w-full h-full">
       <img
         key={`${alt}-${value || "empty"}`}
-        src={currentSrc || candidates[0] || value || ""}
+        src={resolvedUrl}
         alt={alt}
         referrerPolicy="no-referrer"
         className={className || "w-full h-full object-contain bg-white dark:bg-slate-950 p-2"}
