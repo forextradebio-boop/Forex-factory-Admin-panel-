@@ -22,7 +22,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes auto logout
+const INACTIVITY_TIMEOUT = 12 * 60 * 60 * 1000; // Keep admin session stable so QR uploads do not disappear during normal admin work.
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
