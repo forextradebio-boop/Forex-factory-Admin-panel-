@@ -148,7 +148,7 @@ export const adminService = {
       if (!value) return "";
       if (typeof value === "string") {
         const trimmed = value.trim();
-        return /^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed) || /\/uploads\//i.test(trimmed) || /^uploads\//i.test(trimmed) || /^\/api\/uploads\//i.test(trimmed) ? trimmed : "";
+        return /^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed) || /\/uploads\//i.test(trimmed) || /^uploads\//i.test(trimmed) || /^\/api\/uploads\//i.test(trimmed) || trimmed.startsWith("/") ? trimmed : "";
       }
       if (Array.isArray(value)) {
         for (const item of value) {
@@ -158,7 +158,7 @@ export const adminService = {
         return "";
       }
       if (typeof value === "object") {
-        for (const key of ["url", "src", "path", "image", "file", "document", "documentUrl", "fileUrl", "aadharDocument", "panDocument", "frontImage", "selfieImage", "aadharUrl", "panUrl", "aadharDocumentUrl", "panDocumentUrl"]) {
+        for (const key of ["url", "src", "path", "image", "file", "document", "documentUrl", "fileUrl", "images", "files", "aadharDocument", "panDocument", "frontImage", "selfieImage", "aadharUrl", "panUrl", "aadharDocumentUrl", "panDocumentUrl"]) {
           const found = extractImageValue((value as any)[key]);
           if (found) return found;
         }
