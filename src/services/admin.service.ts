@@ -29,6 +29,7 @@ const buildKycImageUrl = (value?: string) => {
   const trimmed = value.trim();
   if (!trimmed) return "";
   if (/^data:image\//i.test(trimmed) || /^blob:/i.test(trimmed) || /^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^(?:[A-Za-z0-9+/]{20,}={0,2})$/.test(trimmed)) return trimmed;
 
   const base = (API_BASE_URL || "https://forex-backend-iem1.onrender.com/api").replace(/\/$/, "");
   const rootBase = base.replace(/\/api$/, "");
