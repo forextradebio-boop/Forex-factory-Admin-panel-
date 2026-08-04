@@ -203,13 +203,9 @@ export const TradingManagement: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 font-mono font-semibold">${t.amount} (lev {t.leverage}x)</td>
                       <td className="py-3.5 px-4 font-mono font-bold">
-                        {t.status === TradeStatus.OPEN ? (
-                          <span className="text-amber-500">CALCULATING...</span>
-                        ) : (
-                          <span className={t.profit && t.profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                            {t.profit && t.profit >= 0 ? `+$${t.profit}` : `-$${Math.abs(t.profit || 0)}`}
-                          </span>
-                        )}
+                        <span className={(t.profit !== undefined ? t.profit : 0) >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                          {(t.profit !== undefined ? t.profit : 0) >= 0 ? `+$${Number(t.profit || 0).toFixed(2)}` : `-$${Math.abs(Number(t.profit || 0)).toFixed(2)}`}
+                        </span>
                       </td>
                       <td className="py-3.5 px-4 font-mono uppercase text-[10px] text-slate-400">{t.status}</td>
                     </tr>
