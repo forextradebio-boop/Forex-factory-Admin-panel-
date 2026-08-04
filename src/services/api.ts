@@ -7,7 +7,7 @@ export const API_BASE_URL = (() => {
   const configuredUrl = ((import.meta as any).env?.VITE_API_URL as string | undefined)?.trim();
 
   if (!configuredUrl) return LIVE_API_BASE_URL;
-  if (configuredUrl.includes("forex-backend-63xj") || configuredUrl.includes("forex-backend-iem1")) {
+  if (configuredUrl.includes("forex-backend-63xj") || configuredUrl.includes("forex-backend-iem1") || configuredUrl.includes("backend-froex")) {
     return LIVE_API_BASE_URL;
   }
 
