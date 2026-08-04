@@ -164,7 +164,7 @@ export const HistoryManagement: React.FC = () => {
                           {new Date(record.createdAt).toLocaleString()}
                         </td>
                         <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">
-                          {record.userId?.fullName || record.userId?.email || 'Unknown User'}
+                          {record.userId?.fullName || record.userId?.username || record.userId?.email || 'Unknown User'}
                         </td>
                         <td className="py-3.5 px-4 text-slate-400 font-mono text-[10px]">
                           {record._id}
