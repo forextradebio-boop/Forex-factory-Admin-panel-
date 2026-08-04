@@ -44,7 +44,7 @@ const getAssetCandidates = (value?: unknown) => {
   if (!trimmedValue) return [] as string[];
   if (/^data:image\//i.test(trimmedValue) || /^blob:/i.test(trimmedValue)) return [trimmedValue];
   if (/^https?:\/\//i.test(trimmedValue)) return [trimmedValue];
-  if (/^(?:[A-Za-z0-9+/]{20,}={0,2})$/.test(trimmedValue)) {
+  if (/^(?:[A-Za-z0-9+/\s]{20,}={0,2})$/.test(trimmedValue)) {
     return [
       `data:image/jpeg;base64,${trimmedValue}`,
       `data:image/png;base64,${trimmedValue}`,
@@ -183,6 +183,12 @@ export const KycManagement: React.FC = () => {
     queryFn: () => adminService.getKycDocuments(),
   });
 
+  const { data: selectedDocDetails, isLoading: isDetailsLoading } = useQuery({
+    queryKey: ["kycDocumentDetails", selectedDoc?.id],
+    queryFn: () => adminService.getKycDocumentDetails(selectedDoc!.id),
+    enabled: !!selectedDoc,
+  });
+
   // Mutations
   const reviewMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: KycStatus; reason?: string }) =>
@@ -310,36 +316,38 @@ export const KycManagement: React.FC = () => {
 
         {/* Selected Document Details & Review Panel */}
         <div className="lg:col-span-1">
-          {selectedDoc ? (
+          {selectedDoc ? (() => {
+            const displayDoc = selectedDocDetails || selectedDoc;
+            return (
             <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6">
               
               {/* Review Panel Header */}
               <div>
                 <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Review Identity Docs</h2>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5 uppercase">Doc ID: {selectedDoc.id}</p>
+                <p className="text-[10px] text-slate-500 font-mono mt-0.5 uppercase">Doc ID: {displayDoc.id} {isDetailsLoading && "(Loading Details...)"}</p>
               </div>
 
               {/* Information */}
               <div className="space-y-2 text-xs divide-y divide-slate-100 dark:divide-slate-800/30">
                 <div className="py-2 flex justify-between">
                   <span className="text-slate-400">Trader Name:</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedDoc.userFullName}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{displayDoc.userFullName}</span>
                 </div>
                 <div className="py-2 flex justify-between">
                   <span className="text-slate-400">Aadhaar Number:</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-medium font-mono">{selectedDoc.aadharNumber || "N/A"}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium font-mono">{displayDoc.aadharNumber || "N/A"}</span>
                 </div>
                 <div className="py-2 flex justify-between">
                   <span className="text-slate-400">PAN Number:</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-medium font-mono">{selectedDoc.panNumber || "N/A"}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium font-mono">{displayDoc.panNumber || "N/A"}</span>
                 </div>
                 <div className="py-2 flex flex-col gap-1">
                   <span className="text-slate-400">Bank Details:</span>
                   <div className="bg-slate-50 dark:bg-slate-900 rounded p-2 text-[10px] font-mono">
-                    <div>Bank: {selectedDoc.bankName || "N/A"}</div>
-                    <div>Account: {selectedDoc.accountNumber || "N/A"}</div>
-                    <div>IFSC: {selectedDoc.ifscCode || "N/A"}</div>
-                    <div>Holder: {selectedDoc.accountHolderName || "N/A"}</div>
+                    <div>Bank: {displayDoc.bankName || "N/A"}</div>
+                    <div>Account: {displayDoc.accountNumber || "N/A"}</div>
+                    <div>IFSC: {displayDoc.ifscCode || "N/A"}</div>
+                    <div>Holder: {displayDoc.accountHolderName || "N/A"}</div>
                   </div>
                 </div>
               </div>
@@ -354,7 +362,7 @@ export const KycManagement: React.FC = () => {
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">AADHAAR CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {(() => {
-                        const aadhaarValue = selectedDoc.frontImage || selectedDoc.aadharDocument || (Array.isArray((selectedDoc as any)?.documents) ? (selectedDoc as any).documents[0] : "");
+                        const aadhaarValue = displayDoc.frontImage || displayDoc.aadharDocument || (Array.isArray((displayDoc as any)?.documents) ? (displayDoc as any).documents[0] : "");
                         return aadhaarValue ? (
                           <>
                             <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(aadhaarValue, "Aadhaar") }>
@@ -367,7 +375,7 @@ export const KycManagement: React.FC = () => {
                             </div>
                           </>
                         ) : (
-                          <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
+                          <span className="text-xs text-slate-500 font-semibold uppercase">{isDetailsLoading ? "Loading Image..." : "No Document Uploaded"}</span>
                         );
                       })()}
                     </div>
@@ -378,7 +386,7 @@ export const KycManagement: React.FC = () => {
                     <span className="text-[9px] text-slate-400 font-mono block mb-1">PAN CARD IMAGE:</span>
                     <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group flex items-center justify-center min-h-[220px]">
                       {(() => {
-                        const panValue = selectedDoc.selfieImage || selectedDoc.panDocument || (Array.isArray((selectedDoc as any)?.documents) ? (selectedDoc as any).documents[1] : "");
+                        const panValue = displayDoc.selfieImage || displayDoc.panDocument || (Array.isArray((displayDoc as any)?.documents) ? (displayDoc as any).documents[1] : "");
                         return panValue ? (
                           <>
                             <div className="w-full h-full cursor-zoom-in" onClick={() => openImagePreview(panValue, "PAN") }>
@@ -391,7 +399,7 @@ export const KycManagement: React.FC = () => {
                             </div>
                           </>
                         ) : (
-                          <span className="text-xs text-slate-500 font-semibold uppercase">No Document Uploaded</span>
+                          <span className="text-xs text-slate-500 font-semibold uppercase">{isDetailsLoading ? "Loading Image..." : "No Document Uploaded"}</span>
                         );
                       })()}
                     </div>
@@ -400,12 +408,12 @@ export const KycManagement: React.FC = () => {
               </div>
 
               {/* Compliance Actions */}
-              {selectedDoc.status === KycStatus.PENDING && (
+              {displayDoc.status === KycStatus.PENDING && (
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
                   {!showRejectionForm ? (
                     <div className="grid grid-cols-1 gap-2 select-none">
                       <button
-                        onClick={() => handleApprove(selectedDoc)}
+                        onClick={() => handleApprove(displayDoc)}
                         className="py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-500/10"
                       >
                         <Check size={14} />
@@ -472,7 +480,8 @@ export const KycManagement: React.FC = () => {
                 </div>
               )}
             </div>
-          ) : (
+            );
+          })() : (
             <div className="p-6 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/20 text-center select-none space-y-2">
               <FileText size={20} className="mx-auto text-slate-400" />
               <p className="text-xs font-semibold text-slate-400">Select a pending KYC document row to load image documents and compliance actions.</p>

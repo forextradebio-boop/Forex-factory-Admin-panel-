@@ -1,17 +1,18 @@
 import axios from "axios";
 
 const LIVE_API_BASE_URL = "https://forex-backend-iem1.onrender.com/api";
+const LOCAL_API_BASE_URL = "http://localhost:8000/api";
 
-// Prefer the live backend and ignore stale deployment values from older Vercel envs.
 export const API_BASE_URL = (() => {
   const configuredUrl = ((import.meta as any).env?.VITE_API_URL as string | undefined)?.trim();
-
-  if (!configuredUrl) return LIVE_API_BASE_URL;
-  if (configuredUrl.includes("forex-backend-63xj") || configuredUrl.includes("forex-backend-iem1") || configuredUrl.includes("backend-froex")) {
-    return LIVE_API_BASE_URL;
+  
+  // If we are in local development, use localhost
+  if ((import.meta as any).env?.DEV) {
+    return LOCAL_API_BASE_URL;
   }
 
-  return configuredUrl;
+  // If deployed to Vercel, use the configured VITE_API_URL or default to the live Render URL
+  return configuredUrl || LIVE_API_BASE_URL;
 })();
 
 export const api = axios.create({

@@ -128,7 +128,7 @@ export const UserManagement: React.FC = () => {
   const exportUsersToCSV = () => {
     const headers = ["ID", "Name", "Email", "Phone", "Status", "KYC Status", "Balance", "Bonus Balance", "Country", "Created At"];
     const rows = filteredUsers.map(u => [
-      u.id, u.fullName, u.email, u.phone || "", u.status, u.kycStatus, u.wallet.balance, u.wallet.bonusBalance, u.country, u.createdAt
+      u.id, u.fullName, u.email, u.phone || "", u.status, u.kycStatus, u.wallet?.balance || 0, u.wallet?.bonusBalance || 0, u.country, u.createdAt
     ]);
     
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -370,11 +370,11 @@ export const UserManagement: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/10 border border-slate-100 dark:border-slate-800/40">
                       <span className="text-[10px] text-slate-400 uppercase">Main Balance</span>
-                      <p className="font-bold text-slate-800 dark:text-slate-100 font-mono mt-1">${selectedUser.wallet.balance.toFixed(2)}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-100 font-mono mt-1">${(selectedUser.wallet?.balance || 0).toFixed(2)}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/10 border border-slate-100 dark:border-slate-800/40">
                       <span className="text-[10px] text-slate-400 uppercase">Promo Bonus</span>
-                      <p className="font-bold text-indigo-400 font-mono mt-1">${selectedUser.wallet.bonusBalance.toFixed(2)}</p>
+                      <p className="font-bold text-indigo-400 font-mono mt-1">${(selectedUser.wallet?.bonusBalance || 0).toFixed(2)}</p>
                     </div>
                   </div>
 
