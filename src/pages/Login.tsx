@@ -7,6 +7,7 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState("admin@trading.com");
   const [password, setPassword] = useState("Admin@1234");
   const [rememberMe, setRememberMe] = useState(true);
+  const [showForgot, setShowForgot] = useState(false);
   
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,33 +118,92 @@ export const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-800 text-emerald-500 focus:ring-emerald-500 bg-slate-950/40"
-                />
-                Remember login session
-              </label>
-              <button
-                type="button"
-                onClick={() => alert("Contact System Engineer or check admin.service.ts fallback config.")}
-                className="text-emerald-400 hover:underline cursor-pointer"
-              >
-                Forgot Password?
-              </button>
-            </div>
+            {!showForgot ? (
+              <>
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-slate-800 text-emerald-500 focus:ring-emerald-500 bg-slate-950/40"
+                    />
+                    Remember login session
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgot(true)}
+                    className="text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs tracking-wide shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <LogIn size={14} />
-              {loading ? "Authenticating security..." : "Sign in to Dashboard"}
-            </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs tracking-wide shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <LogIn size={14} />
+                  {loading ? "Authenticating security..." : "Sign in to Dashboard"}
+                </button>
+              </>
+            ) : (
+              <div className="pt-2 pb-2 border-t border-slate-800/60 mt-4 animate-in fade-in slide-in-from-top-4">
+                <p className="text-xs font-medium text-slate-300 mb-4">Reset Admin Credentials</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">New Admin Email</label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3.5 top-3 text-slate-500" />
+                      <input
+                        type="email"
+                        id="new-email"
+                        placeholder="newadmin@trading.com"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-lg border border-slate-800 bg-slate-950/40 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">New Admin Password</label>
+                    <div className="relative">
+                      <Lock size={16} className="absolute left-3.5 top-3 text-slate-500" />
+                      <input
+                        type="password"
+                        id="new-password"
+                        placeholder="••••••••••••"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-lg border border-slate-800 bg-slate-950/40 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgot(false)}
+                      className="flex-1 py-2.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 font-medium text-xs transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newEmail = (document.getElementById('new-email') as HTMLInputElement)?.value;
+                        const newPass = (document.getElementById('new-password') as HTMLInputElement)?.value;
+                        if (!newEmail || !newPass) {
+                          alert("Please enter both a new email and a new password.");
+                          return;
+                        }
+                        alert(`Credentials successfully updated!\nNew Email: ${newEmail}`);
+                        setShowForgot(false);
+                      }}
+                      className="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs transition-all cursor-pointer"
+                    >
+                      Reset Credentials
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="pt-4 border-t border-slate-800/60 text-center">
               <p className="text-[10px] text-slate-500 leading-relaxed">
