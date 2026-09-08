@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../services/api";
 import { Lock, Mail, Eye, EyeOff, KeyRound, ShieldAlert, Sparkles, LogIn } from "lucide-react";
 
 export const Login: React.FC = () => {
@@ -186,19 +187,30 @@ export const Login: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
+                      disabled={loading}
+                      onClick={async () => {
                         const newEmail = (document.getElementById('new-email') as HTMLInputElement)?.value;
                         const newPass = (document.getElementById('new-password') as HTMLInputElement)?.value;
                         if (!newEmail || !newPass) {
                           alert("Please enter both a new email and a new password.");
                           return;
                         }
-                        alert(`Credentials successfully updated!\nNew Email: ${newEmail}`);
-                        setShowForgot(false);
+                        try {
+                          setLoading(true);
+                          await api.post('/auth/reset-admin', { newEmail, newPassword: newPass });
+                          alert(`Credentials successfully updated!\nYou can now log in with ${newEmail}`);
+                          setEmail(newEmail);
+                          setPassword("");
+                          setShowForgot(false);
+                        } catch (err: any) {
+                          alert(err.message || "Failed to update credentials");
+                        } finally {
+                          setLoading(false);
+                        }
                       }}
-                      className="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs transition-all cursor-pointer"
+                      className="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
                     >
-                      Reset Credentials
+                      {loading ? "Resetting..." : "Reset Credentials"}
                     </button>
                   </div>
                 </div>
