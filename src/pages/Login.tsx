@@ -6,7 +6,7 @@ import { Lock, Mail, Eye, EyeOff, KeyRound, ShieldAlert, Sparkles, LogIn } from 
 export const Login: React.FC = () => {
   const { login, verifyOtp } = useAuth();
   const [email, setEmail] = useState("admin@trading.com");
-  const [password, setPassword] = useState("Admin@1234");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [showForgot, setShowForgot] = useState(false);
   
@@ -31,7 +31,7 @@ export const Login: React.FC = () => {
       // If we made it here without error, trigger second-factor OTP prompt (simulate real secure trading API)
       setRequiresOtp(true);
     } catch (err: any) {
-      setError(err.message || "Invalid credentials. Hint: use admin@trading.com / admin123");
+      setError(err.message || "Login failed. Check the admin email and password configured on the backend.");
     } finally {
       setLoading(false);
     }

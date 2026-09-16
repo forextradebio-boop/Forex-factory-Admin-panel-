@@ -204,7 +204,7 @@ export const adminService = {
     const kyc = res.data.kyc;
     const frontImageRaw = extractImageValue(kyc.aadharDocument || kyc.frontImage || kyc.aadharDocumentUrl || kyc.aadharUrl) || extractImageValue(kyc.documents?.[0] || kyc.documents);
     const selfieImageRaw = extractImageValue(kyc.panDocument || kyc.selfieImage || kyc.panDocumentUrl || kyc.panUrl) || extractImageValue(kyc.documents?.[1] || kyc.documents);
-    
+
     return {
       ...kyc,
       id: kyc._id,
@@ -495,8 +495,13 @@ export const adminService = {
   },
 
   async addLog(action: string, module: string, details: string) {
-    const res = await api.post("/logs", { action, module, details });
-    return res.data;
+    try {
+      const res = await api.post("/logs", { action, module, details });
+      return res.data;
+    } catch (error) {
+      console.warn("Audit log endpoint unavailable", error);
+      return null;
+    }
   },
 
   // --- SYMBOLS / MARKETS ---

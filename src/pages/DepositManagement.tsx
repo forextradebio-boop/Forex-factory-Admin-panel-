@@ -3,15 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "../services/admin.service";
 import { TableSkeleton } from "../components/Skeletons";
 import { Deposit, TransactionStatus } from "../types";
-import { 
-  Check, 
-  X, 
-  Search, 
-  Filter, 
-  Eye, 
-  Coins, 
-  Clock, 
-  CheckCircle, 
+import {
+  Check,
+  X,
+  Search,
+  Filter,
+  Eye,
+  Coins,
+  Clock,
+  CheckCircle,
   AlertCircle,
   FileText
 } from "lucide-react";
@@ -153,7 +153,7 @@ export const DepositManagement: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         {/* Deposits table list */}
         <div className="lg:col-span-2">
           {isError && (
@@ -182,8 +182,8 @@ export const DepositManagement: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
                   {filteredDeposits.map((dep) => (
-                    <tr 
-                      key={dep.id} 
+                    <tr
+                      key={dep.id}
                       onClick={() => { setSelectedDeposit(dep); setShowRejectionForm(false); }}
                       className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/10 cursor-pointer transition-colors ${selectedDeposit?.id === dep.id ? "bg-slate-50 dark:bg-slate-800/20" : ""}`}
                     >
@@ -195,12 +195,12 @@ export const DepositManagement: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">₹{dep.amount}</td>
                       <td className="py-3 px-4 text-slate-800 dark:text-slate-200">
-                      {dep.status === TransactionStatus.APPROVED && dep.creditedUSD 
-                        ? `$${dep.creditedUSD.toFixed(2)}` 
-                        : dep.status === TransactionStatus.PENDING 
-                          ? <span className="text-slate-400">Est: ${(dep.amount / currentRate).toFixed(2)}</span>
-                          : '-'}
-                    </td>
+                        {dep.status === TransactionStatus.APPROVED && dep.creditedUSD
+                          ? `$${dep.creditedUSD.toFixed(2)}`
+                          : dep.status === TransactionStatus.PENDING
+                            ? <span className="text-slate-400">Est: ${(dep.amount / currentRate).toFixed(2)}</span>
+                            : '-'}
+                      </td>
                       <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-400">{dep.paymentMethod}</td>
                       <td className="py-3.5 px-4 text-slate-400">{new Date(dep.createdAt).toLocaleDateString('en-IN')}</td>
                       <td className="py-3.5 px-4">
@@ -223,14 +223,14 @@ export const DepositManagement: React.FC = () => {
         <div className="lg:col-span-1">
           {selectedDeposit ? (
             <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6 relative group">
-              <button 
+              <button
                 onClick={() => handleDelete(selectedDeposit)}
                 className="absolute top-4 right-4 text-rose-500/50 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
                 title="Delete Deposit Record"
               >
                 <X size={16} />
               </button>
-              
+
               <div>
                 <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Audit Deposit Proof</h2>
                 <p className="text-[10px] text-slate-500 font-mono mt-0.5 uppercase">Reference: {selectedDeposit.id}</p>
@@ -282,11 +282,11 @@ export const DepositManagement: React.FC = () => {
                 <div className="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950/20 aspect-video group/img flex items-center justify-center">
                   {selectedDeposit.proofImage ? (
                     <>
-                      <img 
-                        src={getAssetUrl(selectedDeposit.proofImage)} 
-                        alt="Receipt payment proof" 
+                      <img
+                        src={getAssetUrl(selectedDeposit.proofImage)}
+                        alt="Receipt payment proof"
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                         <a href={selectedDeposit.proofImage} target="_blank" rel="noreferrer" className="p-1.5 rounded-lg bg-slate-900 text-slate-200 hover:text-white">
@@ -320,32 +320,32 @@ export const DepositManagement: React.FC = () => {
                         />
                       </div>
                       <div className="grid grid-cols-3 gap-3 select-none">
-                      <button
-                        onClick={() => setShowRejectionForm(true)}
-                        className="py-2.5 rounded-lg border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <X size={14} />
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Block this deposit?`)) {
-                            reviewMutation.mutate({ id: selectedDeposit.id, status: 'BLOCKED' as TransactionStatus, reason: 'Blocked for security reasons.' });
-                          }
-                        }}
-                        className="py-2.5 rounded-lg border border-purple-500/20 text-purple-500 hover:bg-purple-500/10 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <AlertCircle size={14} />
-                        Block
-                      </button>
-                      <button
-                        onClick={() => handleApprove(selectedDeposit)}
-                        className="py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-500/10"
-                      >
-                        <Check size={14} />
-                        Approve
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => setShowRejectionForm(true)}
+                          className="py-2.5 rounded-lg border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <X size={14} />
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Block this deposit?`)) {
+                              reviewMutation.mutate({ id: selectedDeposit.id, status: 'BLOCKED' as TransactionStatus, reason: 'Blocked for security reasons.' });
+                            }
+                          }}
+                          className="py-2.5 rounded-lg border border-purple-500/20 text-purple-500 hover:bg-purple-500/10 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <AlertCircle size={14} />
+                          Block
+                        </button>
+                        <button
+                          onClick={() => handleApprove(selectedDeposit)}
+                          className="py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-500/10"
+                        >
+                          <Check size={14} />
+                          Approve
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <form onSubmit={handleRejectSubmit} className="space-y-3">

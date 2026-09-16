@@ -80,7 +80,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0b] text-slate-800 dark:text-gray-200 flex transition-colors duration-300">
+    <div className="h-screen overflow-hidden bg-slate-50 dark:bg-[#0a0a0b] text-slate-800 dark:text-gray-200 flex transition-colors duration-300">
       
       {/* Sidebar navigation */}
       <Sidebar 

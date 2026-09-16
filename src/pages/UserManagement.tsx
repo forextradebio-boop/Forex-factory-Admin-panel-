@@ -83,6 +83,7 @@ export const UserManagement: React.FC = () => {
     mutationFn: (id: string) => adminService.blockUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(prev => prev ? { ...prev, status: UserStatus.BLOCKED } : null);
       alert("User blocked successfully");
     },
     onError: (err: any) => alert(`Failed: ${err.response?.data?.error || err.message}`)
@@ -92,6 +93,7 @@ export const UserManagement: React.FC = () => {
     mutationFn: (id: string) => adminService.unblockUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(prev => prev ? { ...prev, status: UserStatus.ACTIVE } : null);
       alert("User unblocked successfully");
     },
     onError: (err: any) => alert(`Failed: ${err.response?.data?.error || err.message}`)
@@ -100,7 +102,7 @@ export const UserManagement: React.FC = () => {
   const resetPasswordMutation = useMutation({
     mutationFn: ({ id, pass }: { id: string; pass: string }) => adminService.resetPassword(id, pass),
     onSuccess: () => {
-      alert(`Password reset successful! New temporary credentials: ${newPassword}`);
+      alert("Password reset successful. The new password is not displayed or stored in this panel.");
       setShowPasswordReset(false);
       setNewPassword("");
     },
@@ -160,13 +162,15 @@ export const UserManagement: React.FC = () => {
   const handleResetPasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser || !newPassword) return;
+
+    if (!confirm("Reset this user's password? Any existing game sessions should also be revoked by the backend.")) return;
     
     resetPasswordMutation.mutate({ id: selectedUser.id, pass: newPassword });
   };
 
   const simulateLoginAsUser = (user: User) => {
-    adminService.addLog("Impersonation Login", "User Management", `Super Admin logged into user desk: ${user.fullName}`);
-    alert(`🔒 Entering client simulation mode as user: ${user.fullName}.\nImpersonated session established successfully in new secure container tab!`);
+    const displayName = user.fullName || user.username || user.email || "this user";
+    alert(`User desk opened for: ${displayName}.\nImpersonation is not enabled by this admin panel.`);
   };
 
   const clearHistoryMutation = useMutation({
@@ -333,7 +337,7 @@ export const UserManagement: React.FC = () => {
               {/* Header profile */}
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{selectedUser.fullName}</h2>
+                        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{selectedUser.fullName || selectedUser.username || selectedUser.email || "Unknown user"}</h2>
                   <span className="text-[10px] text-slate-500 font-mono uppercase">{selectedUser.id} | {selectedUser.country}</span>
                 </div>
                 <div className="flex rounded p-0.5 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800">
@@ -384,6 +388,10 @@ export const UserManagement: React.FC = () => {
                       <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedUser.email}</span>
                     </div>
                     <div className="py-2 flex justify-between">
+                      <span className="text-slate-400">Username:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedUser.username || "Not Set"}</span>
+                    </div>
+                    <div className="py-2 flex justify-between">
                       <span className="text-slate-400">Phone:</span>
                       <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedUser.phone || "Not Set"}</span>
                     </div>
@@ -414,6 +422,24 @@ export const UserManagement: React.FC = () => {
 
                   {/* Security utilities */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
+                    <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 text-[10px] text-amber-600 dark:text-amber-400">
+                      Passwords are never shown here. Resetting or revoking access requires backend session invalidation so the user cannot continue an existing game session.
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (selectedUser.status === UserStatus.BLOCKED) return;
+                        if (confirm("Revoke this user's game access now? They will not be able to log in until re-enabled.")) {
+                          blockMutation.mutate(selectedUser.id);
+                        }
+                      }}
+                      disabled={selectedUser.status === UserStatus.BLOCKED || blockMutation.isPending}
+                      className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Ban size={14} />
+                      {selectedUser.status === UserStatus.BLOCKED ? "Game Access Revoked" : "Revoke Game Access"}
+                    </button>
+
                     <button
                       onClick={() => setShowPasswordReset(!showPasswordReset)}
                       className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 cursor-pointer"
@@ -426,15 +452,16 @@ export const UserManagement: React.FC = () => {
                       <form onSubmit={handleResetPasswordSubmit} className="p-3 border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950/20 space-y-2">
                         <label className="block text-[10px] text-slate-400 uppercase font-semibold">New secure password</label>
                         <input
-                          type="text"
+                          type="password"
                           required
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="e.g. AuraPassSecure99!"
-                          className="w-full px-3 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-100"
+                          minLength={8}
+                          placeholder="Enter a new password (min 8 characters)"
+                          className="w-full px-3 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                         />
-                        <button type="submit" className="w-full py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded cursor-pointer">
-                          Confirm password reset
+                        <button type="submit" disabled={resetPasswordMutation.isPending} className="w-full py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded cursor-pointer disabled:opacity-50">
+                          {resetPasswordMutation.isPending ? "Resetting password..." : "Confirm password reset"}
                         </button>
                       </form>
                     )}

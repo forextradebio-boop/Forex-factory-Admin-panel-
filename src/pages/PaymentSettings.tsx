@@ -29,8 +29,8 @@ export const PaymentSettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
-  
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
   const [settings, setSettings] = useState({
     upiEnabled: false,
     bankEnabled: false,
@@ -149,10 +149,9 @@ export const PaymentSettings: React.FC = () => {
       </div>
 
       {message && (
-        <div className={`p-4 rounded-lg flex items-center gap-2 ${
-          message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 
-          'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-        }`}>
+        <div className={`p-4 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+            'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+          }`}>
           {message.type === 'success' && <CheckCircle size={18} />}
           <span>{message.text}</span>
         </div>
@@ -167,17 +166,15 @@ export const PaymentSettings: React.FC = () => {
           <div className="flex border-b border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setActiveTab('upi')}
-              className={`flex-1 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'upi' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-slate-50 dark:bg-slate-800/50' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
-              }`}
+              className={`flex-1 py-4 text-sm font-medium transition-colors ${activeTab === 'upi' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-slate-50 dark:bg-slate-800/50' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
+                }`}
             >
               UPI Configuration
             </button>
             <button
               onClick={() => setActiveTab('bank')}
-              className={`flex-1 py-4 text-sm font-medium transition-colors ${
-                activeTab === 'bank' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-slate-50 dark:bg-slate-800/50' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
-              }`}
+              className={`flex-1 py-4 text-sm font-medium transition-colors ${activeTab === 'bank' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-slate-50 dark:bg-slate-800/50' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30'
+                }`}
             >
               Net Banking Configuration
             </button>
@@ -295,7 +292,7 @@ export const PaymentSettings: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             <div className="mt-8 border-t border-slate-200 dark:border-slate-800 pt-6">
               <label className="block text-sm font-medium mb-1">Deposit Instructions (Shown to users)</label>
               <textarea name="instructions" value={settings.instructions} onChange={handleChange} rows={3} className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Enter any specific instructions or warnings for users..."></textarea>

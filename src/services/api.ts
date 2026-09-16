@@ -1,17 +1,8 @@
 import axios from "axios";
 
 const LIVE_API_BASE_URL = "https://forex-backend-iem1.onrender.com/api";
-const LOCAL_API_BASE_URL = "http://localhost:8000/api";
 
-export const API_BASE_URL = (() => {
-  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  
-  if (isLocalhost) {
-    return LOCAL_API_BASE_URL;
-  }
-
-  return LIVE_API_BASE_URL;
-})();
+export const API_BASE_URL = import.meta.env.VITE_API_URL || LIVE_API_BASE_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
