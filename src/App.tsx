@@ -26,6 +26,7 @@ import { Support } from "./pages/Support";
 import { Settings } from "./pages/Settings";
 import { RoleManagement } from "./pages/RoleManagement";
 import { HistoryManagement } from "./pages/HistoryManagement";
+import ApiManagement from "./pages/ApiManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,7 +116,8 @@ const MainLayout: React.FC = () => {
             <Route path="/market-control" element={<MarketControl />} />
             <Route path="/graph-control" element={<GraphControl />} />
             <Route path="/assets" element={<AssetManagement />} />
-            <Route path="/bonuses" element={<BonusManagement />} />
+            <Route path="/bonus" element={<BonusManagement />} />
+            <Route path="/api-management" element={<ApiManagement />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/analytics" element={<Analytics />} />

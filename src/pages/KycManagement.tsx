@@ -68,10 +68,8 @@ const getAssetCandidates = (value?: unknown) => {
     normalizedBase,
     apiBase,
     typeof window !== "undefined" ? window.location.origin : "",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "https://forex-backend-iem1.onrender.com",
-    "https://forex-backend-iem1.onrender.com/api",
+    "https://forex-backend-cils.onrender.com",
+    "https://forex-backend-cils.onrender.com/api",
   ].filter(Boolean) as string[];
 
   baseCandidates.forEach((base) => {
