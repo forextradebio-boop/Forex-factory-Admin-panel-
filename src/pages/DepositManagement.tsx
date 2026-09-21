@@ -46,6 +46,7 @@ export const DepositManagement: React.FC = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | TransactionStatus>("ALL");
   const [customExchangeRate, setCustomExchangeRate] = useState<number | "">("");
+  const [displayCurrency, setDisplayCurrency] = useState<"INR" | "USDT">("INR");
 
   // Queries
   const { data: deposits, isLoading, isError, error } = useQuery({
@@ -136,6 +137,20 @@ export const DepositManagement: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto shrink-0 select-none">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mr-4">
+            <button
+              onClick={() => setDisplayCurrency("INR")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "INR" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              INR
+            </button>
+            <button
+              onClick={() => setDisplayCurrency("USDT")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "USDT" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              USDT
+            </button>
+          </div>
           <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
             <Filter size={12} />
             STATUS:
@@ -173,8 +188,7 @@ export const DepositManagement: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-bold tracking-wider text-[10px]">
                     <th className="py-3 px-4">User</th>
-                    <th className="py-3 px-4">Amount (INR)</th>
-                    <th className="py-3 px-4">Credited (USD)</th>
+                    <th className="py-3 px-4">Amount ({displayCurrency})</th>
                     <th className="py-3 px-4">Gateway</th>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Status</th>
@@ -193,13 +207,10 @@ export const DepositManagement: React.FC = () => {
                           <p className="text-[10px] text-slate-500 font-mono">{dep.userEmail}</p>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">₹{dep.amount}</td>
-                      <td className="py-3 px-4 text-slate-800 dark:text-slate-200">
-                        {dep.status === TransactionStatus.APPROVED && dep.creditedUSD
-                          ? `$${dep.creditedUSD.toFixed(2)}`
-                          : dep.status === TransactionStatus.PENDING
-                            ? <span className="text-slate-400">Est: ${(dep.amount / currentRate).toFixed(2)}</span>
-                            : '-'}
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">
+                        {displayCurrency === "INR" 
+                          ? `₹${dep.amount}` 
+                          : `$${dep.creditedUSD ? dep.creditedUSD.toFixed(2) : (dep.amount / currentRate).toFixed(2)}`}
                       </td>
                       <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-400">{dep.paymentMethod}</td>
                       <td className="py-3.5 px-4 text-slate-400">{new Date(dep.createdAt).toLocaleDateString('en-IN')}</td>
