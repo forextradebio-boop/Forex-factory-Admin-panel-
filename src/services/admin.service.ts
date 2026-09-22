@@ -266,9 +266,9 @@ export const adminService = {
     }
   },
 
-  async reviewDeposit(id: string, status: TransactionStatus, rejectionReason?: string, customExchangeRate?: number): Promise<Deposit> {
+  async reviewDeposit(id: string, status: TransactionStatus, rejectionReason?: string, customExchangeRate?: number, displayCurrency?: string): Promise<Deposit> {
     if (status === TransactionStatus.APPROVED) {
-      const res = await api.patch(`/admin/deposits/${id}/approve`, { customExchangeRate });
+      const res = await api.patch(`/admin/deposits/${id}/approve`, { customExchangeRate, displayCurrency });
       return res.data.deposit;
     } else {
       const res = await api.patch(`/admin/deposits/${id}/reject`, { reason: rejectionReason });
@@ -302,9 +302,9 @@ export const adminService = {
     }));
   },
 
-  async reviewWithdrawal(id: string, status: TransactionStatus, transactionId?: string, remarks?: string): Promise<Withdrawal> {
+  async reviewWithdrawal(id: string, status: TransactionStatus, transactionId?: string, remarks?: string, displayCurrency?: string): Promise<Withdrawal> {
     if (status === TransactionStatus.APPROVED) {
-      const res = await api.post(`/admin/withdrawals/${id}/approve`, { transactionId });
+      const res = await api.post(`/admin/withdrawals/${id}/approve`, { transactionId, displayCurrency });
       return res.data;
     } else {
       const res = await api.post(`/admin/withdrawals/${id}/reject`, { reason: remarks });

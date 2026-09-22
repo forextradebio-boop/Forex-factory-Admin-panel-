@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout, ro
     { name: "Support Tickets", path: "/support", icon: HelpCircle },
     { name: "Settings", path: "/settings", icon: SettingsIcon },
     { name: "Roles & Permissions", path: "/roles", icon: ClipboardList, superAdminOnly: true },
-    { name: "History & Archives", path: "/history", icon: History }
+    { name: "Game History Payment", path: "/history", icon: History }
   ];
 
   const activeClass = "bg-emerald-500/10 text-emerald-500 dark:bg-blue-600/10 dark:text-blue-400 border border-emerald-500/20 dark:border-blue-600/20 font-medium";

@@ -46,7 +46,8 @@ export const DepositManagement: React.FC = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | TransactionStatus>("ALL");
   const [customExchangeRate, setCustomExchangeRate] = useState<number | "">("");
-  const [displayCurrency, setDisplayCurrency] = useState<"INR" | "USDT">("INR");
+  const [tableViewCurrency, setTableViewCurrency] = useState<"INR" | "USDT">("INR");
+  const [userDisplayCurrency, setUserDisplayCurrency] = useState<"INR" | "USDT" | "BOTH">("BOTH");
 
   // Queries
   const { data: deposits, isLoading, isError, error } = useQuery({
@@ -67,8 +68,8 @@ export const DepositManagement: React.FC = () => {
 
   // Mutations
   const reviewMutation = useMutation({
-    mutationFn: ({ id, status, reason, rate }: { id: string; status: TransactionStatus; reason?: string; rate?: number }) =>
-      adminService.reviewDeposit(id, status, reason, rate),
+    mutationFn: ({ id, status, reason, rate, displayCurr }: { id: string; status: TransactionStatus; reason?: string; rate?: number; displayCurr?: string }) =>
+      adminService.reviewDeposit(id, status, reason, rate, displayCurr),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deposits"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -100,7 +101,7 @@ export const DepositManagement: React.FC = () => {
   const handleApprove = (dep: Deposit) => {
     const rateToUse = customExchangeRate || currentRate;
     if (confirm(`Approve payment deposit of ₹${dep.amount} for ${dep.userFullName}? This will credit $${(dep.amount / rateToUse).toFixed(2)} to their trading wallet (Exchange Rate: ${rateToUse}).`)) {
-      reviewMutation.mutate({ id: dep.id, status: TransactionStatus.APPROVED, rate: customExchangeRate ? Number(customExchangeRate) : undefined });
+      reviewMutation.mutate({ id: dep.id, status: TransactionStatus.APPROVED, rate: customExchangeRate ? Number(customExchangeRate) : undefined, displayCurr: userDisplayCurrency });
     }
   };
 
@@ -139,14 +140,14 @@ export const DepositManagement: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto shrink-0 select-none">
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mr-4">
             <button
-              onClick={() => setDisplayCurrency("INR")}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "INR" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              onClick={() => setTableViewCurrency("INR")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tableViewCurrency === "INR" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               INR
             </button>
             <button
-              onClick={() => setDisplayCurrency("USDT")}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "USDT" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              onClick={() => setTableViewCurrency("USDT")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tableViewCurrency === "USDT" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               USDT
             </button>
@@ -188,7 +189,7 @@ export const DepositManagement: React.FC = () => {
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-bold tracking-wider text-[10px]">
                     <th className="py-3 px-4">User</th>
-                    <th className="py-3 px-4">Amount ({displayCurrency})</th>
+                    <th className="py-3 px-4">Amount ({tableViewCurrency})</th>
                     <th className="py-3 px-4">Gateway</th>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Status</th>
@@ -208,7 +209,7 @@ export const DepositManagement: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-100">
-                        {displayCurrency === "INR" 
+                        {tableViewCurrency === "INR" 
                           ? `₹${dep.amount}` 
                           : `$${dep.creditedUSD ? dep.creditedUSD.toFixed(2) : (dep.amount / currentRate).toFixed(2)}`}
                       </td>
@@ -236,10 +237,10 @@ export const DepositManagement: React.FC = () => {
             <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6 relative group">
               <button
                 onClick={() => handleDelete(selectedDeposit)}
-                className="absolute top-4 right-4 text-rose-500/50 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                className="absolute top-4 right-4 text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded flex items-center gap-1 transition-colors text-[10px] font-bold uppercase"
                 title="Delete Deposit Record"
               >
-                <X size={16} />
+                <X size={14} /> Delete
               </button>
 
               <div>
@@ -330,6 +331,25 @@ export const DepositManagement: React.FC = () => {
                           className="w-24 px-2 py-1 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-right"
                         />
                       </div>
+
+                      <div className="flex flex-col gap-2 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <label className="block text-[10px] text-slate-400 uppercase font-semibold">Show Currency to User As:</label>
+                        <div className="flex items-center gap-4 text-xs font-medium">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="INR" checked={userDisplayCurrency === "INR"} onChange={() => setUserDisplayCurrency("INR")} className="accent-emerald-500" />
+                            INR
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="USDT" checked={userDisplayCurrency === "USDT"} onChange={() => setUserDisplayCurrency("USDT")} className="accent-emerald-500" />
+                            USDT
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="BOTH" checked={userDisplayCurrency === "BOTH"} onChange={() => setUserDisplayCurrency("BOTH")} className="accent-emerald-500" />
+                            Both
+                          </label>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-3 gap-3 select-none">
                         <button
                           onClick={() => setShowRejectionForm(true)}

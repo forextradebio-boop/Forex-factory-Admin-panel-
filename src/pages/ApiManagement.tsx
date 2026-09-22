@@ -13,7 +13,7 @@ import {
 
 interface ApiKey {
   _id: string;
-  provider: 'TWELVEDATA' | 'FINNHUB' | 'BINANCE' | 'YAHOO';
+  provider: string;
   keyName: string;
   keyValue: string;
   status: 'ACTIVE' | 'INACTIVE' | 'EXHAUSTED';
@@ -128,13 +128,18 @@ export default function ApiManagement() {
           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1">Provider</label>
-              <select
+              <input
+                type="text"
+                list="provider-suggestions"
+                required
                 value={newKey.provider}
-                onChange={(e) => setNewKey({ ...newKey, provider: e.target.value })}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded p-2.5 text-white focus:border-emerald-500 focus:outline-none"
-              >
-                {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
+                onChange={(e) => setNewKey({ ...newKey, provider: e.target.value.toUpperCase() })}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded p-2.5 text-white focus:border-emerald-500 focus:outline-none uppercase placeholder-zinc-500"
+                placeholder="e.g. ALPHAVANTAGE"
+              />
+              <datalist id="provider-suggestions">
+                {PROVIDERS.map(p => <option key={p} value={p} />)}
+              </datalist>
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-400 mb-1">Key Name (e.g. Account 1)</label>

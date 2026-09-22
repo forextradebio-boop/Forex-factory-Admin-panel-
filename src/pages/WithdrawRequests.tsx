@@ -28,7 +28,8 @@ export const WithdrawRequests: React.FC = () => {
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | TransactionStatus>("ALL");
-  const [displayCurrency, setDisplayCurrency] = useState<"INR" | "USDT">("INR");
+  const [tableViewCurrency, setTableViewCurrency] = useState<"INR" | "USDT">("INR");
+  const [userDisplayCurrency, setUserDisplayCurrency] = useState<"INR" | "USDT" | "BOTH">("BOTH");
 
   // Queries
   const { data: withdrawals, isLoading, isError, error } = useQuery({
@@ -38,8 +39,8 @@ export const WithdrawRequests: React.FC = () => {
 
   // Mutations
   const reviewMutation = useMutation({
-    mutationFn: ({ id, status, txId, rm }: { id: string; status: TransactionStatus; txId?: string; rm?: string }) =>
-      adminService.reviewWithdrawal(id, status, txId, rm),
+    mutationFn: ({ id, status, txId, rm, displayCurr }: { id: string; status: TransactionStatus; txId?: string; rm?: string; displayCurr?: string }) =>
+      adminService.reviewWithdrawal(id, status, txId, rm, displayCurr),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -52,6 +53,16 @@ export const WithdrawRequests: React.FC = () => {
       alert("Withdrawal request audited successfully.");
     },
     onError: (err: any) => alert(`Failed: ${err.response?.data?.error || err.message}`)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminService.api.delete(`/admin/withdraw/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
+      setSelectedWithdraw(null);
+      alert("Withdrawal deleted successfully.");
+    },
+    onError: (err: any) => alert(`Delete failed: ${err.response?.data?.error || err.message}`)
   });
 
   // Filter lists
@@ -68,7 +79,8 @@ export const WithdrawRequests: React.FC = () => {
       id: selectedWithdraw.id,
       status: TransactionStatus.APPROVED,
       txId: transactionId,
-      rm: remarks
+      rm: remarks,
+      displayCurr: userDisplayCurrency
     });
   };
 
@@ -80,6 +92,12 @@ export const WithdrawRequests: React.FC = () => {
       status: TransactionStatus.REJECTED,
       rm: remarks
     });
+  };
+
+  const handleDelete = (w: Withdrawal) => {
+    if (confirm(`Are you sure you want to permanently delete this withdrawal record?`)) {
+      deleteMutation.mutate(w.id);
+    }
   };
 
   return (
@@ -105,14 +123,14 @@ export const WithdrawRequests: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto shrink-0 select-none">
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mr-4">
             <button
-              onClick={() => setDisplayCurrency("INR")}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "INR" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              onClick={() => setTableViewCurrency("INR")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tableViewCurrency === "INR" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               INR
             </button>
             <button
-              onClick={() => setDisplayCurrency("USDT")}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${displayCurrency === "USDT" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              onClick={() => setTableViewCurrency("USDT")}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-all ${tableViewCurrency === "USDT" ? "bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               USDT
             </button>
@@ -155,7 +173,7 @@ export const WithdrawRequests: React.FC = () => {
                   <tr className="bg-slate-50 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-bold tracking-wider text-[10px]">
                     <th className="py-3 px-4">User Details</th>
                     <th className="py-3 px-4">Payout Target</th>
-                    <th className="py-3 px-4">Amount ({displayCurrency})</th>
+                    <th className="py-3 px-4">Amount ({tableViewCurrency})</th>
                     <th className="py-3 px-4">Created Date</th>
                     <th className="py-3 px-4">Status</th>
                   </tr>
@@ -191,9 +209,9 @@ export const WithdrawRequests: React.FC = () => {
                         )}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-rose-500">
-                        {displayCurrency === "INR" && w.receivedINR 
+                        {tableViewCurrency === "INR" && w.receivedINR 
                           ? `₹${w.receivedINR.toFixed(2)}` 
-                          : displayCurrency === "USDT" || !w.receivedINR
+                          : tableViewCurrency === "USDT" || !w.receivedINR
                             ? `-$${w.amount}`
                             : `-$${w.amount}`}
                       </td>
@@ -216,7 +234,15 @@ export const WithdrawRequests: React.FC = () => {
         {/* Selected Request Detail Audit Panel */}
         <div className="lg:col-span-1">
           {selectedWithdraw ? (
-            <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6">
+            <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm space-y-6 relative group">
+              <button
+                onClick={() => handleDelete(selectedWithdraw)}
+                className="absolute top-4 right-4 text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded flex items-center gap-1 transition-colors text-[10px] font-bold uppercase"
+                title="Delete Withdrawal Record"
+              >
+                <X size={14} /> Delete
+              </button>
+
               <div>
                 <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Audit Payout Request</h2>
                 <p className="text-[10px] text-slate-500 font-mono mt-0.5 uppercase">Request Ref: {selectedWithdraw.id}</p>
@@ -342,6 +368,24 @@ export const WithdrawRequests: React.FC = () => {
                           placeholder="e.g. Cleared via Chase Wire."
                           className="w-full text-xs rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20 text-slate-800 dark:text-slate-100 p-2 focus:outline-none"
                         />
+                      </div>
+
+                      <div className="flex flex-col gap-2 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-800">
+                        <label className="block text-[10px] text-slate-400 uppercase font-semibold">Show Currency to User As:</label>
+                        <div className="flex items-center gap-4 text-xs font-medium">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="INR" checked={userDisplayCurrency === "INR"} onChange={() => setUserDisplayCurrency("INR")} className="accent-emerald-500" />
+                            INR
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="USDT" checked={userDisplayCurrency === "USDT"} onChange={() => setUserDisplayCurrency("USDT")} className="accent-emerald-500" />
+                            USDT
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="displayCurr" value="BOTH" checked={userDisplayCurrency === "BOTH"} onChange={() => setUserDisplayCurrency("BOTH")} className="accent-emerald-500" />
+                            Both
+                          </label>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
