@@ -21,7 +21,7 @@ interface ApiKey {
   createdAt: string;
 }
 
-const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO'];
+const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE'];
 
 export default function ApiManagement() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
