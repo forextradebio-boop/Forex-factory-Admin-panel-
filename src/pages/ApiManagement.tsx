@@ -28,6 +28,7 @@ interface MarketProvider {
   lastSuccessfulFetch: string | null;
   lastSuccessfulPrice: number | null;
   lastError: string | null;
+  apiKeyConfigured: boolean;
 }
 
 const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE'];
@@ -295,7 +296,9 @@ export default function ApiManagement() {
               <div className="space-y-3 mt-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">API Key:</span>
-                  <span className="text-white font-mono bg-zinc-800 px-2 rounded">Configured (.env)</span>
+                  <span className={`font-mono px-2 rounded ${p.apiKeyConfigured ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                    {p.apiKeyConfigured ? 'Configured (.env)' : 'Missing (.env)'}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
