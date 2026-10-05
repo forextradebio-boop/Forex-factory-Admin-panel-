@@ -31,7 +31,7 @@ interface MarketProvider {
   apiKeyConfigured: boolean;
 }
 
-const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE'];
+const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE', 'OILPRICEAPI'];
 
 export default function ApiManagement() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
