@@ -21,28 +21,42 @@ interface ApiKey {
   createdAt: string;
 }
 
+interface MarketProvider {
+  symbol: string;
+  provider: string;
+  enabled: boolean;
+  lastSuccessfulFetch: string | null;
+  lastSuccessfulPrice: number | null;
+  lastError: string | null;
+}
+
 const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE'];
 
 export default function ApiManagement() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [providers, setProviders] = useState<MarketProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newKey, setNewKey] = useState({ provider: 'TWELVEDATA', keyName: '', keyValue: '' });
 
-  const fetchKeys = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/admin/apikeys');
-      setKeys(res.data);
+      const [keysRes, provRes] = await Promise.all([
+        api.get('/admin/apikeys'),
+        api.get('/admin/market-providers').catch(() => ({ data: { providers: [] } }))
+      ]);
+      setKeys(keysRes.data);
+      if (provRes.data.providers) setProviders(provRes.data.providers);
     } catch (error: any) {
-      alert('Failed to load API keys');
+      alert('Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchKeys();
+    fetchData();
   }, []);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -54,7 +68,9 @@ export default function ApiManagement() {
       alert('API Key added successfully');
       setNewKey({ provider: 'TWELVEDATA', keyName: '', keyValue: '' });
       setShowAddForm(false);
-      fetchKeys();
+      setNewKey({ provider: 'TWELVEDATA', keyName: '', keyValue: '' });
+      setShowAddForm(false);
+      fetchData();
     } catch (error: any) {
       alert(error.response?.data?.error || 'Failed to add key');
     }
@@ -64,7 +80,7 @@ export default function ApiManagement() {
     try {
       await api.patch(`/admin/apikeys/${id}/toggle`, {});
       alert('Key status updated');
-      fetchKeys();
+      fetchData();
     } catch (error: any) {
       alert('Failed to update status');
     }
@@ -75,9 +91,18 @@ export default function ApiManagement() {
     try {
       await api.delete(`/admin/apikeys/${id}`);
       alert('API Key deleted');
-      fetchKeys();
+      fetchData();
     } catch (error: any) {
       alert('Failed to delete key');
+    }
+  };
+
+  const handleToggleProvider = async (symbol: string, currentStatus: boolean) => {
+    try {
+      await api.patch(`/admin/market-providers/${symbol}`, { enabled: !currentStatus });
+      fetchData();
+    } catch (error: any) {
+      alert('Failed to update provider status');
     }
   };
 
@@ -106,7 +131,7 @@ export default function ApiManagement() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={fetchKeys}
+            onClick={fetchData}
             className="p-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded transition"
             title="Refresh"
           >
@@ -233,6 +258,84 @@ export default function ApiManagement() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+      
+      {/* Market Providers Section */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+          <Activity className="w-5 h-5 mr-3 text-emerald-500" />
+          Specialized Market Providers
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {providers.map((p) => (
+            <div key={`${p.symbol}-${p.provider}`} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 relative overflow-hidden">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    {p.symbol === 'USOIL' ? 'US Oil (WTI)' : p.symbol}
+                  </h3>
+                  <span className="text-sm text-emerald-500 font-semibold mt-1 inline-block capitalize">
+                    {p.provider.replace('_', ' ')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleToggleProvider(p.symbol, p.enabled)}
+                  className={`px-4 py-1.5 rounded text-sm font-bold transition flex items-center gap-2 ${
+                    p.enabled 
+                      ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                  }`}
+                >
+                  {p.enabled ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                  {p.enabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+
+              <div className="space-y-3 mt-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">API Key:</span>
+                  <span className="text-white font-mono bg-zinc-800 px-2 rounded">Configured (.env)</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Last Price:</span>
+                  <span className="text-white font-mono font-bold">
+                    {p.lastSuccessfulPrice ? `$${p.lastSuccessfulPrice.toFixed(2)}` : 'N/A'}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-zinc-400">Last Updated:</span>
+                  <span className="text-zinc-300">
+                    {p.lastSuccessfulFetch ? new Date(p.lastSuccessfulFetch).toLocaleString() : 'Never'}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm items-center pt-2 border-t border-zinc-800/50 mt-2">
+                  <span className="text-zinc-400">Status:</span>
+                  {p.lastError ? (
+                     <span className="text-red-400 flex items-center gap-1 text-xs max-w-[200px] truncate" title={p.lastError}>
+                       <AlertTriangle className="w-3 h-3" /> {p.lastError}
+                     </span>
+                  ) : p.enabled ? (
+                     <span className="text-green-500 font-semibold text-xs flex items-center gap-1">
+                       <Activity className="w-3 h-3" /> Connected
+                     </span>
+                  ) : (
+                     <span className="text-zinc-500 font-semibold text-xs flex items-center gap-1">
+                       Disabled
+                     </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          {providers.length === 0 && (
+            <div className="col-span-full p-8 text-center text-zinc-500 border border-dashed border-zinc-800 rounded-lg">
+              No specialized providers found.
+            </div>
+          )}
         </div>
       </div>
       
