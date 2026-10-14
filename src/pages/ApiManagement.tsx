@@ -22,6 +22,7 @@ interface ApiKey {
 }
 
 interface MarketProvider {
+  _id?: string;
   symbol: string;
   provider: string;
   enabled: boolean;
@@ -110,9 +111,13 @@ export default function ApiManagement() {
     }
   };
 
-  const handleToggleProvider = async (symbol: string, currentStatus: boolean) => {
+  const handleToggleProvider = async (symbol: string, provider: string, currentStatus: boolean, id?: string) => {
     try {
-      await api.patch(`/admin/market-providers/${symbol}`, { enabled: !currentStatus });
+      await api.patch(`/admin/market-providers/${symbol}`, { 
+        enabled: !currentStatus,
+        provider,
+        id
+      });
       fetchData();
     } catch (error: any) {
       alert('Failed to update provider status');
@@ -293,7 +298,7 @@ export default function ApiManagement() {
                   </span>
                 </div>
                 <button
-                  onClick={() => handleToggleProvider(p.symbol, p.enabled)}
+                  onClick={() => handleToggleProvider(p.symbol, p.provider, p.enabled, p._id)}
                   className={`px-4 py-1.5 rounded text-sm font-bold transition flex items-center gap-2 ${
                     p.enabled 
                       ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' 
