@@ -31,7 +31,19 @@ interface MarketProvider {
   apiKeyConfigured: boolean;
 }
 
-const PROVIDERS = ['TWELVEDATA', 'FINNHUB', 'BINANCE', 'YAHOO', 'VANTAGE', 'OILPRICEAPI', 'MASSIVE'];
+const PROVIDERS = [
+  'METALPRICEAPI',
+  'METALS_API',
+  'TWELVEDATA',
+  'FINNHUB',
+  'BINANCE',
+  'YAHOO',
+  'VANTAGE',
+  'OILPRICEAPI',
+  'MASSIVE',
+  'INFOWAY',
+  'APININJAS'
+];
 
 export default function ApiManagement() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -274,7 +286,7 @@ export default function ApiManagement() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    {p.symbol === 'USOIL' ? 'US Oil (WTI)' : p.symbol}
+                    {p.symbol === 'USOIL' ? 'US Oil (WTI)' : p.symbol === 'XAUUSD' ? 'Gold (XAU/USD)' : p.symbol === 'XAGUSD' ? 'Silver (XAG/USD)' : p.symbol}
                   </h3>
                   <span className="text-sm text-emerald-500 font-semibold mt-1 inline-block capitalize">
                     {p.provider.replace('_', ' ')}
@@ -297,7 +309,7 @@ export default function ApiManagement() {
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">API Key:</span>
                   <span className={`font-mono px-2 rounded ${p.apiKeyConfigured ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                    {p.apiKeyConfigured ? 'Configured (.env)' : 'Missing (.env)'}
+                    {p.apiKeyConfigured ? 'Configured (Active)' : 'Missing Key'}
                   </span>
                 </div>
                 
